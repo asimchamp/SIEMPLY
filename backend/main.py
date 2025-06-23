@@ -19,7 +19,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from backend.config.settings import settings
-from backend.models import get_db, Host, HostCreate, HostResponse, HostUpdate
+from backend.models import get_db, Base, engine
+from backend.api.hosts import router as hosts_router
+from backend.api.jobs import router as jobs_router
 
 # Configure logging
 logging.basicConfig(
@@ -44,67 +46,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API Routes
+# Include routers
+app.include_router(hosts_router)
+app.include_router(jobs_router)
+
+# Root API route
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {"message": "Welcome to SIEMply API", "version": settings.VERSION}
+    return {
+        "message": "Welcome to SIEMply API", 
+        "version": settings.VERSION,
+        "endpoints": {
+            "hosts": "/hosts",
+            "jobs": "/jobs",
+            "health": "/health"
+        }
+    }
 
+# Health check
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "ok", "api_version": settings.VERSION}
-
-# Host CRUD operations
-@app.get("/hosts", response_model=List[HostResponse])
-async def get_hosts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Get all hosts"""
-    hosts = db.query(Host).offset(skip).limit(limit).all()
-    return hosts
-
-@app.post("/hosts", response_model=HostResponse, status_code=status.HTTP_201_CREATED)
-async def create_host(host: HostCreate, db: Session = Depends(get_db)):
-    """Create a new host"""
-    db_host = Host(**host.dict())
-    db.add(db_host)
-    db.commit()
-    db.refresh(db_host)
-    return db_host
-
-@app.get("/hosts/{host_id}", response_model=HostResponse)
-async def get_host(host_id: int, db: Session = Depends(get_db)):
-    """Get a host by ID"""
-    host = db.query(Host).filter(Host.id == host_id).first()
-    if host is None:
-        raise HTTPException(status_code=404, detail="Host not found")
-    return host
-
-@app.patch("/hosts/{host_id}", response_model=HostResponse)
-async def update_host(host_id: int, host_update: HostUpdate, db: Session = Depends(get_db)):
-    """Update a host"""
-    db_host = db.query(Host).filter(Host.id == host_id).first()
-    if db_host is None:
-        raise HTTPException(status_code=404, detail="Host not found")
-    
-    # Update host attributes
-    update_data = host_update.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_host, key, value)
-    
-    db.commit()
-    db.refresh(db_host)
-    return db_host
-
-@app.delete("/hosts/{host_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_host(host_id: int, db: Session = Depends(get_db)):
-    """Delete a host"""
-    db_host = db.query(Host).filter(Host.id == host_id).first()
-    if db_host is None:
-        raise HTTPException(status_code=404, detail="Host not found")
-    
-    db.delete(db_host)
-    db.commit()
-    return None
 
 def parse_args():
     """Parse command line arguments"""
@@ -132,6 +96,10 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     logger.info(f"Starting {settings.PROJECT_NAME} API on {args.host}:{args.port}")
+    
+    # Create database tables if they don't exist
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created (if they didn't exist)")
     
     uvicorn.run(
         "main:app",

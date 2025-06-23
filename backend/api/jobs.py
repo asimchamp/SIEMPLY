@@ -1,0 +1,304 @@
+"""
+Job API Router
+Handles job operations including triggering installations
+"""
+import uuid
+import asyncio
+from datetime import datetime
+from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query
+from sqlalchemy.orm import Session
+
+from backend.models import get_db, Job, JobCreate, JobUpdate, JobResponse, JobType, JobStatus
+from backend.models import Host
+from backend.installers.splunk import install_splunk_universal_forwarder, install_splunk_enterprise
+from backend.installers.cribl import install_cribl_worker, install_cribl_leader
+
+router = APIRouter(
+    prefix="/jobs",
+    tags=["jobs"],
+    responses={404: {"description": "Job not found"}},
+)
+
+
+@router.get("/", response_model=List[JobResponse])
+async def get_jobs(
+    skip: int = 0, 
+    limit: int = 100, 
+    host_id: Optional[int] = None,
+    job_type: Optional[str] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all jobs with optional filtering
+    """
+    query = db.query(Job)
+    
+    if host_id:
+        query = query.filter(Job.host_id == host_id)
+    
+    if job_type:
+        query = query.filter(Job.job_type == job_type)
+    
+    if status:
+        query = query.filter(Job.status == status)
+    
+    # Order by created_at descending (newest first)
+    query = query.order_by(Job.created_at.desc())
+    
+    jobs = query.offset(skip).limit(limit).all()
+    return jobs
+
+
+@router.get("/{job_id}", response_model=JobResponse)
+async def get_job(job_id: int, db: Session = Depends(get_db)):
+    """
+    Get a job by ID
+    """
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.get("/by-job-id/{unique_job_id}", response_model=JobResponse)
+async def get_job_by_unique_id(unique_job_id: str, db: Session = Depends(get_db)):
+    """
+    Get a job by unique job ID
+    """
+    job = db.query(Job).filter(Job.job_id == unique_job_id).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+async def _run_job(job_id: int, db: Session):
+    """
+    Background task to run a job
+    """
+    # Get job from database
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        return
+    
+    # Get host
+    host = db.query(Host).filter(Host.id == job.host_id).first()
+    if not host:
+        # Update job status to failed
+        job.status = JobStatus.FAILED.value
+        job.stderr = "Host not found"
+        job.completed_at = datetime.utcnow()
+        db.commit()
+        return
+    
+    # Update job status to running
+    job.status = JobStatus.RUNNING.value
+    job.started_at = datetime.utcnow()
+    db.commit()
+    
+    # Execute job based on type
+    try:
+        result = None
+        
+        if job.job_type == JobType.SPLUNK_UF_INSTALL.value:
+            result = await install_splunk_universal_forwarder(host, job.parameters)
+        
+        elif job.job_type == JobType.SPLUNK_ENT_INSTALL.value:
+            result = await install_splunk_enterprise(host, job.parameters)
+        
+        elif job.job_type == JobType.CRIBL_WORKER_INSTALL.value:
+            result = await install_cribl_worker(host, job.parameters)
+        
+        elif job.job_type == JobType.CRIBL_LEADER_INSTALL.value:
+            result = await install_cribl_leader(host, job.parameters)
+        
+        # Update job with result
+        if result:
+            job.return_code = result.get("return_code")
+            job.stdout = result.get("stdout", "")
+            job.stderr = result.get("stderr", "")
+            job.result = result
+            
+            # Set status based on return code
+            if result.get("success"):
+                job.status = JobStatus.COMPLETED.value
+            else:
+                job.status = JobStatus.FAILED.value
+    
+    except Exception as e:
+        # Update job with error
+        job.status = JobStatus.FAILED.value
+        job.stderr = f"Error executing job: {str(e)}"
+    
+    # Mark job as completed
+    job.completed_at = datetime.utcnow()
+    db.commit()
+
+
+@router.post("/install/splunk-uf", response_model=JobResponse)
+async def create_splunk_uf_install_job(
+    host_id: int,
+    parameters: Dict[str, Any],
+    is_dry_run: bool = False,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a job to install Splunk Universal Forwarder
+    """
+    # Check if host exists
+    host = db.query(Host).filter(Host.id == host_id).first()
+    if host is None:
+        raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Create job
+    job = Job(
+        job_id=f"splunk-uf-{uuid.uuid4()}",
+        host_id=host_id,
+        job_type=JobType.SPLUNK_UF_INSTALL.value,
+        status=JobStatus.PENDING.value,
+        is_dry_run=is_dry_run,
+        parameters=parameters
+    )
+    
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    
+    # Run job in background
+    background_tasks.add_task(_run_job, job.id, db)
+    
+    return job
+
+
+@router.post("/install/splunk-enterprise", response_model=JobResponse)
+async def create_splunk_enterprise_install_job(
+    host_id: int,
+    parameters: Dict[str, Any],
+    is_dry_run: bool = False,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a job to install Splunk Enterprise
+    """
+    # Check if host exists
+    host = db.query(Host).filter(Host.id == host_id).first()
+    if host is None:
+        raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Create job
+    job = Job(
+        job_id=f"splunk-ent-{uuid.uuid4()}",
+        host_id=host_id,
+        job_type=JobType.SPLUNK_ENT_INSTALL.value,
+        status=JobStatus.PENDING.value,
+        is_dry_run=is_dry_run,
+        parameters=parameters
+    )
+    
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    
+    # Run job in background
+    background_tasks.add_task(_run_job, job.id, db)
+    
+    return job
+
+
+@router.post("/install/cribl-worker", response_model=JobResponse)
+async def create_cribl_worker_install_job(
+    host_id: int,
+    parameters: Dict[str, Any],
+    is_dry_run: bool = False,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a job to install Cribl Worker
+    """
+    # Check if host exists
+    host = db.query(Host).filter(Host.id == host_id).first()
+    if host is None:
+        raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Create job
+    job = Job(
+        job_id=f"cribl-worker-{uuid.uuid4()}",
+        host_id=host_id,
+        job_type=JobType.CRIBL_WORKER_INSTALL.value,
+        status=JobStatus.PENDING.value,
+        is_dry_run=is_dry_run,
+        parameters=parameters
+    )
+    
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    
+    # Run job in background
+    background_tasks.add_task(_run_job, job.id, db)
+    
+    return job
+
+
+@router.post("/install/cribl-leader", response_model=JobResponse)
+async def create_cribl_leader_install_job(
+    host_id: int,
+    parameters: Dict[str, Any],
+    is_dry_run: bool = False,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a job to install Cribl Leader
+    """
+    # Check if host exists
+    host = db.query(Host).filter(Host.id == host_id).first()
+    if host is None:
+        raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Create job
+    job = Job(
+        job_id=f"cribl-leader-{uuid.uuid4()}",
+        host_id=host_id,
+        job_type=JobType.CRIBL_LEADER_INSTALL.value,
+        status=JobStatus.PENDING.value,
+        is_dry_run=is_dry_run,
+        parameters=parameters
+    )
+    
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    
+    # Run job in background
+    background_tasks.add_task(_run_job, job.id, db)
+    
+    return job
+
+
+@router.post("/{job_id}/cancel", response_model=JobResponse)
+async def cancel_job(job_id: int, db: Session = Depends(get_db)):
+    """
+    Cancel a job if it's pending
+    """
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Can only cancel pending jobs
+    if job.status != JobStatus.PENDING.value:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot cancel job with status {job.status}"
+        )
+    
+    job.status = JobStatus.CANCELLED.value
+    job.completed_at = datetime.utcnow()
+    db.commit()
+    db.refresh(job)
+    
+    return job 

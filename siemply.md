@@ -41,24 +41,24 @@ SIEMply/
 | task-port-config | Implement configurable ports for frontend UI (e.g., localhost:8500) and API endpoints | ✅ |
 | task-database-models | Define host inventory, job logs, user auth (ORM models) | ✅ |
 
-### Phase 2: Backend API Development
-| Task | Description |
-|------|-------------|
-| task-api-host-management | Create APIs to add, edit, delete, and tag hosts with roles (Splunk/Cribl) |
-| task-api-job-runner | Create endpoint to trigger install jobs (e.g., POST /install/splunk) |
-| task-ssh-module | Implement secure SSH task runner (with timeout, retry logic) |
-| task-cribl-installer | Script for Cribl install + config (cribl_worker, cribl_leader) |
-| task-splunk-installer | Script for Splunk UF and Enterprise installs |
-| task-job-logger | Capture stdout, stderr, return codes in logs table |
+### Phase 2: Backend API Development ✅ (COMPLETED)
+| Task | Description | Status |
+|------|-------------|--------|
+| task-api-host-management | Create APIs to add, edit, delete, and tag hosts with roles (Splunk/Cribl) | ✅ |
+| task-api-job-runner | Create endpoint to trigger install jobs (e.g., POST /install/splunk) | ✅ |
+| task-ssh-module | Implement secure SSH task runner (with timeout, retry logic) | ✅ |
+| task-cribl-installer | Script for Cribl install + config (cribl_worker, cribl_leader) | ✅ |
+| task-splunk-installer | Script for Splunk UF and Enterprise installs | ✅ |
+| task-job-logger | Capture stdout, stderr, return codes in logs table | ✅ |
 
-### Phase 3: Frontend UI
-| Task | Description |
-|------|-------------|
-| task-ui-dashboard | Build the main dashboard to show hosts, jobs, and quick actions |
-| task-ui-host-table | Display host inventory with filters by role/status |
-| task-ui-job-history | Show past job logs (status, type, time) |
-| task-ui-install-modal | Create UI flow for installing Splunk/Cribl (select version, role, host) |
-| task-ui-settings-page | Manage API keys, tokens, ports, backend URLs |
+### Phase 3: Frontend UI ✅ (COMPLETED)
+| Task | Description | Status |
+|------|-------------|--------|
+| task-ui-dashboard | Build the main dashboard to show hosts, jobs, and quick actions | ✅ |
+| task-ui-host-table | Display host inventory with filters by role/status | ✅ |
+| task-ui-job-history | Show past job logs (status, type, time) | ✅ |
+| task-ui-install-modal | Create UI flow for installing Splunk/Cribl (select version, role, host) | ✅ |
+| task-ui-settings-page | Manage API keys, tokens, ports, backend URLs | ✅ |
 
 ### Phase 4: Advanced Features
 | Task | Description |
