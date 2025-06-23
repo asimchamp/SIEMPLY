@@ -1,0 +1,36 @@
+# SIEMply Frontend Development Rules
+
+# Component Structure
+- Use functional components only (no class components)
+- Keep components small and focused on a single responsibility
+- Implement proper prop validation
+- Use TypeScript for all component definitions
+- Implement proper error boundaries
+
+# State Management
+- Use React hooks (useState, useEffect, useContext) or Vue.js Composition API
+- Avoid prop drilling by using context or state management library
+- Keep component state as local as possible
+- Use consistent state management patterns throughout the app
+- Document complex state workflows with comments
+
+# UI/UX Standards
+- Follow a consistent design system
+- Ensure all UI elements are accessible (WCAG compliance)
+- Implement responsive design for all components
+- Add loading states for async operations
+- Add proper error handling and user feedback
+
+# File Organization
+- Group components by feature or page
+- Keep styles close to components
+- Use a consistent naming convention for files
+- Create reusable UI components in a shared directory
+- Separate business logic from presentation components
+
+# Testing
+- Write snapshot tests for UI components
+- Test component interaction with testing library
+- Mock API calls in component tests
+- Test custom hooks independently
+- Use coverage reporting for frontend tests 

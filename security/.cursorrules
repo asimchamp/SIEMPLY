@@ -1,0 +1,36 @@
+# SIEMply Security Rules
+
+# Credentials Management
+- Never hardcode credentials in source code
+- Always load secrets from .env files or a secure vault
+- Rotate credentials regularly and support credential rotation in code
+- Use environment variables for sensitive configuration
+- Never log sensitive information
+
+# SSH Security
+- Prefer key-based authentication over password authentication
+- Implement timeout for all SSH connections
+- Handle SSH failures gracefully with appropriate logging
+- Use least privilege principle for SSH operations
+- Validate host keys before establishing connections
+
+# API Security
+- Implement proper authentication and authorization
+- Use HTTPS for all API communications
+- Validate all input data
+- Implement rate limiting where appropriate
+- Follow OWASP security best practices
+
+# Frontend Security
+- Sanitize all user inputs
+- Use Content Security Policy
+- Protect against XSS attacks
+- Implement proper CSRF protection
+- Don't expose sensitive information in client-side code
+
+# Database Security
+- Use parameterized queries to prevent SQL injection
+- Encrypt sensitive data at rest
+- Use database users with least required privileges
+- Rotate database credentials regularly
+- Implement database connection pooling with timeout 

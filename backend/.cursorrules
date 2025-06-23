@@ -1,0 +1,36 @@
+# SIEMply Backend Development Rules
+
+# Python Code Style
+- All Python code must use type hints
+- Follow PEP8 guidelines for formatting
+- Maximum line length: 100 characters
+- Use descriptive variable and function names
+- Use async functions for I/O operations
+
+# API Development
+- All API endpoints must return appropriate HTTP status codes
+- All endpoints must have error handling
+- All endpoints must log requests to file/database
+- Use consistent response format for all endpoints
+- Document all APIs with docstrings and OpenAPI/Swagger annotations
+
+# SSH/Automation Rules
+- All SSH operations must use timeout
+- All SSH operations must have retry logic
+- All network/SSH modules must log start/stop/error times
+- SSH credential handling must follow security best practices
+- Each SSH operation should be idempotent when possible
+
+# Installer Scripts
+- All installer scripts must support dry-run/test mode
+- All installer scripts must be re-runnable safely
+- All jobs must have a unique job_id logged
+- All scripts must validate inputs before execution
+- All scripts must provide meaningful error messages
+
+# Testing
+- Use pytest for all backend tests
+- Maintain at least 80% test coverage for core modules
+- Write unit tests for all non-trivial functions
+- Mock external dependencies in tests
+- Use fixtures and parametrization for test reuse 
