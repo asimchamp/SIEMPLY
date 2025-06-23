@@ -4,12 +4,39 @@
  */
 import axios from 'axios';
 
+// Get API URL from environment or localStorage
+const getApiUrl = () => {
+  // First check localStorage for user settings
+  const settingsJson = localStorage.getItem('siemply_settings');
+  if (settingsJson) {
+    try {
+      const settings = JSON.parse(settingsJson);
+      if (settings.apiUrl) {
+        return settings.apiUrl;
+      }
+    } catch (e) {
+      console.error('Error parsing settings from localStorage:', e);
+    }
+  }
+  
+  // Fall back to environment variable
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+};
+
 // Create axios instance with base URL and default headers
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: getApiUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+  // Enable credentials for CORS
+  withCredentials: false,
+});
+
+// Add request interceptor to update baseURL if it changes
+api.interceptors.request.use((config) => {
+  config.baseURL = getApiUrl();
+  return config;
 });
 
 // Host types
