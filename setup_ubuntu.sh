@@ -184,7 +184,7 @@ cat > start_frontend.sh << EOL
 #!/bin/bash
 # Start SIEMply frontend server
 cd /opt/SIEMPLY/frontend
-npm run dev -- --port 8500
+npm run dev -- --port 8500 --host 0.0.0.0
 EOL
 chmod +x start_frontend.sh
 
@@ -200,7 +200,16 @@ echo "Starting SIEMply Frontend..."
 /opt/SIEMPLY/start_frontend.sh &
 FRONTEND_PID=\$!
 
-echo "Both servers are running. Press Ctrl+C to stop."
+# Get server IP address
+SERVER_IP=\$(hostname -I | awk '{print \$1}')
+if [ -z "\$SERVER_IP" ]; then
+    SERVER_IP="localhost"
+fi
+
+echo "Both servers are running."
+echo "Frontend should be accessible at: http://\$SERVER_IP:8500"
+echo "Backend should be accessible at: http://\$SERVER_IP:5000"
+echo "Press Ctrl+C to stop."
 trap "kill \$BACKEND_PID \$FRONTEND_PID; exit" INT TERM
 wait
 EOL

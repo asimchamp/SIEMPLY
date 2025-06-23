@@ -179,6 +179,37 @@ This happens because the Settings class requires a SECRET_KEY. The setup scripts
    echo "SIEMPLY_SECRET_KEY=${SECRET_KEY}" >> .env
    ```
 
+### Network Access Issues
+
+If you can't access the application from other machines on your network, the services might be binding only to localhost (127.0.0.1). To fix this:
+
+1. Run the fix script:
+   ```bash
+   # For standard installation:
+   ./fix_network_binding.sh
+   
+   # For Ubuntu installation:
+   sudo ./fix_network_binding.sh
+   ```
+
+2. Or manually update the start scripts:
+   ```bash
+   # For frontend (add --host 0.0.0.0):
+   sed -i 's/npm run dev -- --port 8500/npm run dev -- --port 8500 --host 0.0.0.0/' start_frontend.sh
+   
+   # For backend (ensure it binds to 0.0.0.0):
+   # The backend should already bind to 0.0.0.0 by default
+   ```
+
+3. After making these changes, restart the services:
+   ```bash
+   # For Ubuntu installation:
+   sudo systemctl restart siemply
+   
+   # For standard installation:
+   ./start.sh
+   ```
+
 ### Port Conflicts
 
 If you encounter port conflicts:
