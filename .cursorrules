@@ -17,4 +17,10 @@
 - Never hardcode secrets or configuration
 - Always use .env files or environment variables for configuration
 - Use a consistent naming convention for environment variables (e.g., SIEMPLY_DB_URI)
-- Configure customizable ports for both frontend (UI) and backend (API) services 
+- Configure customizable ports for both frontend (UI) and backend (API) services
+
+# Linting and Code Quality
+- Run linters before committing code (eslint for frontend, flake8 for backend)
+- Fix all TypeScript errors before deploying frontend code
+- Maintain 100% type coverage in TypeScript files
+- Run tests to ensure code quality 

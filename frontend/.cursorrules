@@ -33,4 +33,11 @@
 - Test component interaction with testing library
 - Mock API calls in component tests
 - Test custom hooks independently
-- Use coverage reporting for frontend tests 
+- Use coverage reporting for frontend tests
+
+# TypeScript and Linting
+- Ensure all TypeScript files pass type checking
+- Fix lint errors before committing code
+- Use ESLint for code quality enforcement
+- Maintain strict type safety (no any types unless absolutely necessary)
+- Run ./fix-typescript.sh to install required type definitions 
