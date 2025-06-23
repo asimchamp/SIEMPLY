@@ -8,11 +8,15 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
+import secrets
 
 # Load environment variables from .env file if it exists
 env_path = Path(__file__).parent.parent / '.env'
 if env_path.exists():
     load_dotenv(dotenv_path=str(env_path))
+
+# Generate a default secret key if not provided
+DEFAULT_SECRET_KEY = secrets.token_hex(32)
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
@@ -34,7 +38,7 @@ class Settings(BaseSettings):
     UI_PORT: int = Field(default=8500, env="SIEMPLY_UI_PORT")
     
     # Authentication
-    SECRET_KEY: str = Field(..., env="SIEMPLY_SECRET_KEY")
+    SECRET_KEY: str = Field(default=DEFAULT_SECRET_KEY, env="SIEMPLY_SECRET_KEY")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, env="SIEMPLY_TOKEN_EXPIRE_MINUTES")
     
     # SSH Configuration

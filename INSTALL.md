@@ -149,6 +149,36 @@ This happens because `Field` is still in the `pydantic` package, not in `pydanti
    sudo ./fix_pydantic.sh
    ```
 
+### Missing SECRET_KEY Error
+
+If you encounter this error:
+
+```
+ValidationError: 1 validation error for Settings
+SECRET_KEY
+  Field required [type=missing, input_value={}, input_type=dict]
+```
+
+This happens because the Settings class requires a SECRET_KEY. The setup scripts automatically generate one, but if you need to fix it manually:
+
+1. Run the fix script:
+   ```bash
+   # For standard installation:
+   ./fix_secret_key.sh
+   
+   # For Ubuntu installation:
+   sudo ./fix_secret_key.sh
+   ```
+
+2. Or manually add SECRET_KEY to your .env file:
+   ```bash
+   # Generate a random secret key
+   SECRET_KEY=$(openssl rand -hex 32)
+   
+   # Add it to .env file
+   echo "SIEMPLY_SECRET_KEY=${SECRET_KEY}" >> .env
+   ```
+
 ### Port Conflicts
 
 If you encounter port conflicts:

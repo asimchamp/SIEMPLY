@@ -143,11 +143,14 @@ echo -e "${GREEN}✓ Frontend dependencies installed${NC}"
 echo -e "\n${YELLOW}Checking environment configuration...${NC}"
 if [ ! -f ".env" ]; then
     echo -e "Creating default .env file..."
+    # Generate a random secret key
+    SECRET_KEY=$(openssl rand -hex 32)
     cat > .env << EOL
 # SIEMply Environment Configuration
 SIEMPLY_API_PORT=5000
 SIEMPLY_UI_PORT=8500
 SIEMPLY_DB_URI=sqlite:///siemply.db
+SIEMPLY_SECRET_KEY=${SECRET_KEY}
 EOL
     echo -e "${GREEN}✓ Default .env file created${NC}"
 else
