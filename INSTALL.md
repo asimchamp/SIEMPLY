@@ -210,6 +210,38 @@ If you can't access the application from other machines on your network, the ser
    ./start.sh
    ```
 
+### API Connection Issues
+
+If you're seeing "Failed to fetch dashboard data. Please check your connection to the API server" error in the frontend:
+
+1. Run the fix script:
+   ```bash
+   # For standard installation:
+   ./fix_api_connection.sh
+   
+   # For Ubuntu installation:
+   sudo ./fix_api_connection.sh
+   ```
+
+2. Or manually create a .env file in the frontend directory:
+   ```bash
+   # Get your server IP
+   SERVER_IP=$(hostname -I | awk '{print $1}')
+   
+   # Create .env file
+   echo "VITE_API_URL=http://${SERVER_IP}:5000" > frontend/.env
+   ```
+
+3. After making these changes, restart the services and visit the update settings page:
+   ```bash
+   # Restart services
+   sudo systemctl restart siemply  # For Ubuntu
+   ./start.sh                      # For standard installation
+   
+   # Then visit in your browser:
+   http://YOUR_SERVER_IP:8500/update-settings.html
+   ```
+
 ### Port Conflicts
 
 If you encounter port conflicts:

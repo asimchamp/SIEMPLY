@@ -145,17 +145,77 @@ if [ ! -f ".env" ]; then
     echo -e "Creating default .env file..."
     # Generate a random secret key
     SECRET_KEY=$(openssl rand -hex 32)
+    
+    # Get server IP address
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+    if [ -z "$SERVER_IP" ]; then
+        SERVER_IP="localhost"
+    fi
+    
     cat > .env << EOL
 # SIEMply Environment Configuration
 SIEMPLY_API_PORT=5000
 SIEMPLY_UI_PORT=8500
 SIEMPLY_DB_URI=sqlite:///siemply.db
 SIEMPLY_SECRET_KEY=${SECRET_KEY}
+SIEMPLY_FRONTEND_URL=http://${SERVER_IP}:8500
 EOL
     echo -e "${GREEN}✓ Default .env file created${NC}"
 else
     echo -e "${GREEN}✓ .env file already exists${NC}"
 fi
+
+# Configure frontend API connection
+echo -e "\n${YELLOW}Configuring frontend API connection...${NC}"
+# Get server IP address
+SERVER_IP=$(hostname -I | awk '{print $1}')
+if [ -z "$SERVER_IP" ]; then
+    SERVER_IP="localhost"
+fi
+
+# Create .env file for frontend
+mkdir -p frontend
+cat > frontend/.env << EOL
+# SIEMply Frontend Environment Variables
+VITE_API_URL=http://${SERVER_IP}:5000
+EOL
+echo -e "${GREEN}✓ Frontend .env file created${NC}"
+
+# Create update-settings.html for localStorage
+mkdir -p frontend/public
+cat > frontend/public/update-settings.html << EOL
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update SIEMply Settings</title>
+    <script>
+        // Update localStorage settings
+        const settings = {
+            apiUrl: 'http://${SERVER_IP}:5000',
+            theme: 'dark',
+            defaultSplunkVersion: '9.1.1',
+            defaultCriblVersion: '3.4.1',
+            defaultInstallDir: '/opt'
+        };
+        
+        localStorage.setItem('siemply_settings', JSON.stringify(settings));
+        document.write('<p>Settings updated successfully!</p>');
+        document.write('<p>API URL set to: ' + settings.apiUrl + '</p>');
+        
+        // Redirect after 3 seconds
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 3000);
+    </script>
+</head>
+<body>
+    <h1>SIEMply Settings Update</h1>
+    <p>This page updates the localStorage settings for SIEMply.</p>
+    <p>You will be redirected to the main application in 3 seconds...</p>
+</body>
+</html>
+EOL
+echo -e "${GREEN}✓ Settings update page created${NC}"
 
 # Initialize database
 echo -e "\n${YELLOW}Initializing database...${NC}"
@@ -255,5 +315,7 @@ echo -e "\nTo start as a system service:"
 echo -e "  ${YELLOW}systemctl start siemply${NC}"
 echo -e "\nTo enable automatic start on boot:"
 echo -e "  ${YELLOW}systemctl enable siemply${NC}"
-echo -e "\nBackend will be available at: ${BLUE}http://localhost:5000${NC}"
-echo -e "Frontend will be available at: ${BLUE}http://localhost:8500${NC}" 
+echo -e "\nBackend will be available at: ${BLUE}http://${SERVER_IP}:5000${NC}"
+echo -e "Frontend will be available at: ${BLUE}http://${SERVER_IP}:8500${NC}"
+echo -e "\nIMPORTANT: On first run, visit: ${BLUE}http://${SERVER_IP}:8500/update-settings.html${NC}"
+echo -e "This will update your browser settings to connect to the API server." 
