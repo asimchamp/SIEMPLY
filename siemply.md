@@ -60,6 +60,13 @@ SIEMply/
 | task-ui-install-modal | Create UI flow for installing Splunk/Cribl (select version, role, host) | ✅ |
 | task-ui-settings-page | Manage API keys, tokens, ports, backend URLs | ✅ |
 
+### Phase 3.5: Installation & Compatibility Fixes ✅ (COMPLETED)
+| Task | Description | Status |
+|------|-------------|--------|
+| task-ubuntu-setup | Create Ubuntu-specific setup script to fix externally-managed-environment error | ✅ |
+| task-pydantic-fix | Fix Pydantic v2 compatibility (BaseSettings moved to pydantic-settings) | ✅ |
+| task-install-docs | Create comprehensive installation documentation | ✅ |
+
 ### Phase 4: Advanced Features
 | Task | Description |
 |------|-------------|

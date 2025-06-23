@@ -90,6 +90,36 @@ This is because newer Python versions (3.12+) on Debian/Ubuntu systems prevent i
    pip install --break-system-packages -r backend/requirements.txt
    ```
 
+### Pydantic BaseSettings Error
+
+If you encounter this error:
+
+```
+pydantic.errors.PydanticImportError: `BaseSettings` has been moved to the `pydantic-settings` package.
+```
+
+This happens because the code was written for Pydantic v1, but you're using Pydantic v2. The setup scripts automatically fix this by:
+
+1. Installing the pydantic-settings package
+2. Updating the import statement in settings.py
+
+If you need to fix this manually:
+
+1. Install the required package:
+   ```bash
+   pip install pydantic-settings
+   ```
+
+2. Edit the settings.py file:
+   ```bash
+   # Change this line:
+   from pydantic import BaseSettings, Field
+   
+   # To this:
+   from pydantic import Field
+   from pydantic_settings import BaseSettings
+   ```
+
 ### Port Conflicts
 
 If you encounter port conflicts:
