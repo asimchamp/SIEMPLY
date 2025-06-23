@@ -297,6 +297,73 @@ fi
 pip install pydantic-settings
 echo -e "${GREEN}✓ pydantic-settings installed${NC}"
 
+# Fix 7: Update CORS configuration in main.py
+echo -e "\n${YELLOW}Fix 7: Updating CORS configuration in main.py...${NC}"
+MAIN_PY="$BACKEND_DIR/main.py"
+if [ -f "$MAIN_PY" ]; then
+    # Create backup
+    cp "$MAIN_PY" "${MAIN_PY}.bak"
+    
+    # Check if we need to update CORS configuration
+    if grep -q "allow_origins=\[\"\*\"\]" "$MAIN_PY"; then
+        echo -e "${YELLOW}Updating CORS configuration...${NC}"
+        
+        # Create a temporary file with the updated CORS configuration
+        TMP_FILE=$(mktemp)
+        
+        # Write the beginning of the file until the CORS configuration
+        sed -n '1,/# Configure CORS/p' "$MAIN_PY" > "$TMP_FILE"
+        
+        # Add the new CORS configuration
+        cat >> "$TMP_FILE" << 'EOL'
+# Configure CORS
+origins = [
+    "http://localhost:8500",
+    "http://127.0.0.1:8500",
+    f"http://{settings.API_HOST}:8500",
+]
+
+# Add any additional origins from environment variable
+if hasattr(settings, "FRONTEND_URL") and settings.FRONTEND_URL:
+    origins.append(settings.FRONTEND_URL)
+
+# If we have a server IP, add it to allowed origins
+import socket
+try:
+    # Get all IP addresses
+    hostname = socket.gethostname()
+    ip_addresses = socket.gethostbyname_ex(hostname)[2]
+    for ip in ip_addresses:
+        origins.append(f"http://{ip}:8500")
+except Exception as e:
+    logger.warning(f"Failed to get local IP addresses: {e}")
+
+# Log the allowed origins
+logger.info(f"Allowed CORS origins: {origins}")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+EOL
+        
+        # Write the rest of the file after the CORS middleware
+        sed -n '/allow_headers=/,$p' "$MAIN_PY" | sed '1,2d' >> "$TMP_FILE"
+        
+        # Replace the original file with the updated one
+        mv "$TMP_FILE" "$MAIN_PY"
+        
+        echo -e "${GREEN}✓ CORS configuration updated${NC}"
+    else
+        echo -e "${GREEN}✓ CORS configuration already updated${NC}"
+    fi
+else
+    echo -e "${RED}✗ main.py not found at $MAIN_PY${NC}"
+fi
+
 echo -e "\n${GREEN}======================================${NC}"
 echo -e "${GREEN}      All Fixes Applied!             ${NC}"
 echo -e "${GREEN}======================================${NC}"

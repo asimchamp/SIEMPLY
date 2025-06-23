@@ -162,6 +162,12 @@ if [ -z "$SERVER_IP" ]; then
     SERVER_IP="localhost"
 fi
 
+# Add FRONTEND_URL to .env if not already present
+if ! grep -q "SIEMPLY_FRONTEND_URL" .env; then
+    echo "SIEMPLY_FRONTEND_URL=http://${SERVER_IP}:8500" >> .env
+    echo -e "${GREEN}✓ Added FRONTEND_URL to .env file${NC}"
+fi
+
 # Create .env file for frontend
 mkdir -p frontend
 cat > frontend/.env << EOL

@@ -38,9 +38,33 @@ app = FastAPI(
 )
 
 # Configure CORS
+origins = [
+    "http://localhost:8500",
+    "http://127.0.0.1:8500",
+    f"http://{settings.API_HOST}:8500",
+]
+
+# Add any additional origins from environment variable
+if hasattr(settings, "FRONTEND_URL") and settings.FRONTEND_URL:
+    origins.append(settings.FRONTEND_URL)
+
+# If we have a server IP, add it to allowed origins
+import socket
+try:
+    # Get all IP addresses
+    hostname = socket.gethostname()
+    ip_addresses = socket.gethostbyname_ex(hostname)[2]
+    for ip in ip_addresses:
+        origins.append(f"http://{ip}:8500")
+except Exception as e:
+    logger.warning(f"Failed to get local IP addresses: {e}")
+
+# Log the allowed origins
+logger.info(f"Allowed CORS origins: {origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update this for production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

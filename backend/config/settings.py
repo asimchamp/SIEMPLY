@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     
     # Frontend
     UI_PORT: int = Field(default=8500, env="SIEMPLY_UI_PORT")
+    FRONTEND_URL: str = Field(default="http://localhost:8500", env="SIEMPLY_FRONTEND_URL")
     
     # Authentication
     SECRET_KEY: str = Field(default=DEFAULT_SECRET_KEY, env="SIEMPLY_SECRET_KEY")
