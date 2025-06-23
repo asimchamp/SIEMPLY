@@ -120,6 +120,35 @@ If you need to fix this manually:
    from pydantic_settings import BaseSettings
    ```
 
+### Field Import Error
+
+If you encounter this error:
+
+```
+ImportError: cannot import name 'Field' from 'pydantic_settings'
+```
+
+This happens because `Field` is still in the `pydantic` package, not in `pydantic_settings`. The setup scripts automatically fix this, but if you need to fix it manually:
+
+1. Edit the settings.py file:
+   ```bash
+   # Change this line:
+   from pydantic_settings import BaseSettings, Field
+   
+   # To this:
+   from pydantic import Field
+   from pydantic_settings import BaseSettings
+   ```
+
+2. Or run the fix script:
+   ```bash
+   # For standard installation:
+   ./fix_pydantic.sh
+   
+   # For Ubuntu installation:
+   sudo ./fix_pydantic.sh
+   ```
+
 ### Port Conflicts
 
 If you encounter port conflicts:

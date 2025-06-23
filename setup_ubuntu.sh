@@ -108,16 +108,21 @@ echo -e "${GREEN}✓ Backend dependencies installed${NC}"
 echo -e "\n${YELLOW}Fixing BaseSettings import in settings.py...${NC}"
 SETTINGS_FILE="backend/config/settings.py"
 if [ -f "$SETTINGS_FILE" ]; then
-    # Check if the file needs to be updated
-    if grep -q "from pydantic import BaseSettings" "$SETTINGS_FILE"; then
-        # Create a backup of the original file
-        cp "$SETTINGS_FILE" "${SETTINGS_FILE}.bak"
-        
+    # Create a backup of the original file
+    cp "$SETTINGS_FILE" "${SETTINGS_FILE}.bak"
+    
+    # Check if we need to fix the Field import
+    if grep -q "from pydantic_settings import BaseSettings, Field" "$SETTINGS_FILE"; then
+        # Update the import statements
+        sed -i 's/from pydantic_settings import BaseSettings, Field/from pydantic import Field\nfrom pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
+        echo -e "${GREEN}✓ Field import fixed${NC}"
+    # Check if we need to fix just the BaseSettings import
+    elif grep -q "from pydantic import BaseSettings" "$SETTINGS_FILE"; then
         # Update the import statement
         sed -i 's/from pydantic import BaseSettings/from pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
         echo -e "${GREEN}✓ BaseSettings import fixed${NC}"
     else
-        echo -e "${GREEN}✓ BaseSettings import already correct${NC}"
+        echo -e "${GREEN}✓ Imports already correct${NC}"
     fi
 else
     echo -e "${YELLOW}⚠ Settings file not found at $SETTINGS_FILE${NC}"

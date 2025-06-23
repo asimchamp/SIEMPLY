@@ -71,11 +71,37 @@ echo -e "${GREEN}✓ pydantic-settings installed${NC}"
 # Fix BaseSettings import in settings.py
 echo -e "\n${YELLOW}Fixing BaseSettings import in settings.py...${NC}"
 if [ -f "$SETTINGS_FILE" ]; then
-    # Check if the file needs to be updated
-    if grep -q "from pydantic import BaseSettings" "$SETTINGS_FILE"; then
-        # Create a backup of the original file
-        cp "$SETTINGS_FILE" "${SETTINGS_FILE}.bak"
-        echo -e "${GREEN}✓ Backup created at ${SETTINGS_FILE}.bak${NC}"
+    # Create a backup of the original file
+    cp "$SETTINGS_FILE" "${SETTINGS_FILE}.bak"
+    echo -e "${GREEN}✓ Backup created at ${SETTINGS_FILE}.bak${NC}"
+    
+    # Check if we need to fix the Field import
+    if grep -q "from pydantic_settings import BaseSettings, Field" "$SETTINGS_FILE"; then
+        echo -e "${YELLOW}Fixing incorrect Field import...${NC}"
+        
+        # Update the import statements
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS requires different sed syntax
+            sed -i '' 's/from pydantic_settings import BaseSettings, Field/from pydantic import Field\nfrom pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
+        else
+            # Linux
+            sed -i 's/from pydantic_settings import BaseSettings, Field/from pydantic import Field\nfrom pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
+        fi
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✓ Field import fixed${NC}"
+        else
+            echo -e "${RED}✗ Failed to update Field import${NC}"
+            echo -e "${YELLOW}Please manually edit $SETTINGS_FILE and change:${NC}"
+            echo -e "  from pydantic_settings import BaseSettings, Field"
+            echo -e "to:"
+            echo -e "  from pydantic import Field"
+            echo -e "  from pydantic_settings import BaseSettings"
+            exit 1
+        fi
+    # Check if we need to fix just the BaseSettings import
+    elif grep -q "from pydantic import BaseSettings" "$SETTINGS_FILE"; then
+        echo -e "${YELLOW}Fixing BaseSettings import...${NC}"
         
         # Update the import statement
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -97,7 +123,7 @@ if [ -f "$SETTINGS_FILE" ]; then
             exit 1
         fi
     else
-        echo -e "${GREEN}✓ BaseSettings import already correct${NC}"
+        echo -e "${GREEN}✓ Imports already correct${NC}"
     fi
 else
     echo -e "${RED}✗ Settings file not found at $SETTINGS_FILE${NC}"
