@@ -4,6 +4,7 @@
 - All code must follow the project structure defined in siemply.md
 - All commits should reference a task ID (e.g., "task-api-host-management: Implemented host CRUD operations")
 - Always follow security best practices, especially for SSH and credential handling
+- Always fix code in main codebase, not create any fix scripts
 
 # File Structure Rules
 - API endpoints must be in backend/api/

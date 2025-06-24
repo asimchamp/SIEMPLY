@@ -11,7 +11,7 @@ import yaml
 from backend.config.settings import settings
 from backend.models import User, get_db, Host
 from backend.api.auth import get_current_active_user, get_current_admin_user
-from backend.automation.ssh_client import SshClient
+from backend.automation.ssh_client import SIEMplySSHClient, create_ssh_client_from_host
 
 router = APIRouter(
     prefix="/configs",
@@ -57,13 +57,7 @@ async def push_splunk_configs(
     results = []
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create SSH client
-        ssh_client = SshClient(
-            host.ip_address,
-            host.port,
-            host.username,
-            password=host.password,
-            key_filename=host.ssh_key_path,
-        )
+        ssh_client = create_ssh_client_from_host(host)
         
         # Process each uploaded file
         for file in files:
@@ -75,20 +69,23 @@ async def push_splunk_configs(
                     f.write(contents)
                 
                 # Create target directory if it doesn't exist
-                ssh_client.exec_command(f"mkdir -p {target_dir}")
+                ssh_client.execute_command(f"mkdir -p {target_dir}")
                 
-                # Copy file to host
+                # Copy file to host using SCP (need to implement file upload)
                 remote_path = f"{target_dir}/{file.filename}"
-                ssh_client.upload_file(file_path, remote_path)
+                # For now, use cat to create the file
+                with open(file_path, "r") as f:
+                    file_content = f.read()
+                    ssh_client.execute_command(f"cat > {remote_path} << 'EOF'\n{file_content}\nEOF")
                 
                 # Set permissions
-                ssh_client.exec_command(f"chmod 644 {remote_path}")
+                ssh_client.execute_command(f"chmod 644 {remote_path}")
                 
                 # If we're pushing to Splunk, restart splunk if file is not a .conf.example
                 if "splunk" in target_dir and not file.filename.endswith(".conf.example"):
                     restart_cmd = "sudo -u splunk /opt/splunk/bin/splunk restart"
                     try:
-                        ssh_client.exec_command(restart_cmd, timeout=60)
+                        ssh_client.execute_command(restart_cmd)
                     except Exception as e:
                         results.append({
                             "filename": file.filename,
@@ -148,13 +145,7 @@ async def push_cribl_configs(
     results = []
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create SSH client
-        ssh_client = SshClient(
-            host.ip_address,
-            host.port,
-            host.username,
-            password=host.password,
-            key_filename=host.ssh_key_path,
-        )
+        ssh_client = create_ssh_client_from_host(host)
         
         # Process each uploaded file
         for file in files:
@@ -178,19 +169,22 @@ async def push_cribl_configs(
                         continue
                 
                 # Create target directory if it doesn't exist
-                ssh_client.exec_command(f"mkdir -p {target_dir}")
+                ssh_client.execute_command(f"mkdir -p {target_dir}")
                 
-                # Copy file to host
+                # Copy file to host using the execute_command method
                 remote_path = f"{target_dir}/{file.filename}"
-                ssh_client.upload_file(file_path, remote_path)
+                # For now, use cat to create the file
+                with open(file_path, "r") as f:
+                    file_content = f.read()
+                    ssh_client.execute_command(f"cat > {remote_path} << 'EOF'\n{file_content}\nEOF")
                 
                 # Set permissions
-                ssh_client.exec_command(f"chmod 644 {remote_path}")
+                ssh_client.execute_command(f"chmod 644 {remote_path}")
                 
                 # Restart Cribl service
                 restart_cmd = "systemctl restart cribl"
                 try:
-                    ssh_client.exec_command(restart_cmd, timeout=60)
+                    ssh_client.execute_command(restart_cmd)
                 except Exception as e:
                     results.append({
                         "filename": file.filename,

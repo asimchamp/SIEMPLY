@@ -252,6 +252,19 @@ echo -e "\n${YELLOW}Step 5: Creating admin user...${NC}"
 python backend/create_admin.py --username admin --email admin@example.com --password admin123 --full-name "SIEMply Admin"
 echo -e "${GREEN}✓ Admin user created${NC}"
 
+# Step 6: Fix SSH client import issue
+echo -e "\n${YELLOW}Step 6: Fixing SSH client import issue...${NC}"
+if [ -f "fix_ssh_client.py" ]; then
+    python fix_ssh_client.py
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ SSH client import fixed${NC}"
+    else
+        echo -e "${RED}✗ Failed to fix SSH client import${NC}"
+    fi
+else
+    echo -e "${RED}✗ fix_ssh_client.py not found${NC}"
+fi
+
 echo -e "\n${GREEN}======================================${NC}"
 echo -e "${GREEN}      Setup Complete!                 ${NC}"
 echo -e "${GREEN}======================================${NC}"
