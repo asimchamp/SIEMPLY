@@ -67,14 +67,14 @@ SIEMply/
 | task-pydantic-fix | Fix Pydantic v2 compatibility (BaseSettings moved to pydantic-settings) | ✅ |
 | task-install-docs | Create comprehensive installation documentation | ✅ |
 
-### Phase 4: Advanced Features
-| Task | Description |
-|------|-------------|
-| task-auth-system | Add login system with role-based access (admin, user) |
-| task-config-push | Push Splunk/Cribl config files like inputs.conf, cribl.yml |
-| task-cron-or-scheduler | Allow task scheduling (e.g., nightly install check) |
-| task-api-cribl-monitor | Query Cribl REST API for health/status of leader + workers |
-| task-api-splunk-monitor | Query Splunk REST for health check or forwarder status |
+### Phase 4: Advanced Features ✅ (COMPLETED)
+| Task | Description | Status |
+|------|-------------|--------|
+| task-auth-system | Add login system with role-based access (admin, user) | ✅ |
+| task-config-push | Push Splunk/Cribl config files like inputs.conf, cribl.yml | ✅ |
+| task-cron-or-scheduler | Allow task scheduling (e.g., nightly install check) | ✅ |
+| task-api-cribl-monitor | Query Cribl REST API for health/status of leader + workers | ✅ |
+| task-api-splunk-monitor | Query Splunk REST for health check or forwarder status | ✅ |
 
 ### Optional: Deployment
 | Task | Description |

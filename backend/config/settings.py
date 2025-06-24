@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     # Authentication
     SECRET_KEY: str = Field(default=DEFAULT_SECRET_KEY, env="SIEMPLY_SECRET_KEY")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, env="SIEMPLY_TOKEN_EXPIRE_MINUTES")
+    ALGORITHM: str = Field(default="HS256", env="SIEMPLY_JWT_ALGORITHM")
     
     # SSH Configuration
     SSH_DEFAULT_USER: str = Field(default="root", env="SSH_DEFAULT_USER")

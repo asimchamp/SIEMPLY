@@ -1,30 +1,29 @@
 import React, { ReactNode, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  AppBar, 
-  Box, 
-  Toolbar, 
+  Layout as AntLayout, 
+  Menu, 
   Typography, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  IconButton, 
-  Container, 
   Divider,
   Switch,
-  FormControlLabel
-} from '@mui/material';
+  Button,
+  Avatar,
+  Dropdown
+} from 'antd';
 import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Computer as ComputerIcon,
-  History as HistoryIcon,
-  Settings as SettingsIcon,
-  Brightness4 as Brightness4Icon,
-  Brightness7 as Brightness7Icon
-} from '@mui/icons-material';
+  DashboardOutlined,
+  DesktopOutlined,
+  HistoryOutlined,
+  SettingOutlined,
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
+  UserOutlined,
+  LogoutOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../services/authContext';
+
+const { Header, Sider, Content } = AntLayout;
+const { Title, Text } = Typography;
 
 // Props interface
 interface LayoutProps {
@@ -33,143 +32,159 @@ interface LayoutProps {
   toggleDarkMode: () => void;
 }
 
-// Navigation items
-const navItems = [
-  { text: 'Dashboard', path: '/', icon: <DashboardIcon /> },
-  { text: 'Host Management', path: '/hosts', icon: <ComputerIcon /> },
-  { text: 'Job History', path: '/jobs', icon: <HistoryIcon /> },
-  { text: 'Settings', path: '/settings', icon: <SettingsIcon /> }
-];
-
-// Drawer width
-const drawerWidth = 240;
-
-const Layout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }) => {
+const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }) => {
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
   };
-  
-  const drawer = (
-    <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap>
-          SIEMply
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
-        {navItems.map((item) => (
-          <ListItem 
-            button 
-            key={item.text}
-            onClick={() => {
-              navigate(item.path);
-              setMobileOpen(false);
-            }}
-          >
-            <ListItemIcon>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <Box sx={{ p: 2 }}>
-        <FormControlLabel
-          control={
-            <Switch 
-              checked={darkMode} 
-              onChange={toggleDarkMode} 
-              color="primary"
-            />
-          }
-          label={darkMode ? 'Dark Mode' : 'Light Mode'}
-        />
-      </Box>
-    </div>
-  );
+
+  const menuItems = [
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: '/hosts',
+      icon: <DesktopOutlined />,
+      label: 'Host Management',
+    },
+    {
+      key: '/jobs',
+      icon: <HistoryOutlined />,
+      label: 'Job History',
+    },
+    {
+      key: '/settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+  ];
+
+  const handleMenuClick = (path: string) => {
+    navigate(path);
+  };
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      label: 'Profile',
+      icon: <UserOutlined />,
+    },
+    {
+      key: 'logout',
+      label: 'Logout',
+      icon: <LogoutOutlined />,
+      onClick: handleLogout,
+    },
+  ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+    <AntLayout style={{ minHeight: '100vh' }}>
+      <Sider 
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+        theme={darkMode ? 'dark' : 'light'}
+        style={{ 
+          overflow: 'auto',
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            SIEMply - SIEM Installation & Management System
-          </Typography>
-          <Box sx={{ flexGrow: 1 }} />
-          <IconButton color="inherit" onClick={toggleDarkMode}>
-            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="navigation"
-      >
-        {/* Mobile drawer */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
+        <div style={{ 
+          height: 32, 
+          margin: 16, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: collapsed ? 'center' : 'flex-start'
+        }}>
+          <Title level={4} style={{ margin: 0, color: darkMode ? 'white' : undefined }}>
+            <span style={{ color: '#1890ff' }}>SIEM</span>
+            {!collapsed && 'ply'}
+          </Title>
+        </div>
         
-        {/* Desktop drawer */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      
-      {/* Main content */}
-      <Box
-        component="main"
-        sx={{ 
-          flexGrow: 1, 
-          p: 3, 
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          marginTop: '64px'
-        }}
-      >
-        <Container maxWidth="lg">
+        <Menu
+          theme={darkMode ? 'dark' : 'light'}
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          onClick={({ key }) => handleMenuClick(key)}
+        />
+
+        <Divider />
+        
+        {!collapsed && (
+          <div style={{ padding: '0 16px', marginBottom: 8 }}>
+            <Text type="secondary">Theme:</Text>
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: 8 }}>
+              <Text>Light</Text>
+              <Switch 
+                checked={darkMode} 
+                onChange={toggleDarkMode} 
+                style={{ margin: '0 8px' }} 
+              />
+              <Text>Dark</Text>
+            </div>
+          </div>
+        )}
+      </Sider>
+
+      <AntLayout style={{ marginLeft: collapsed ? 80 : 200 }}>
+        <Header style={{ 
+          padding: '0 16px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          width: '100%',
+          background: darkMode ? '#141414' : '#fff',
+          boxShadow: '0 1px 4px rgba(0,21,41,.08)'
+        }}>
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+          />
+
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {!collapsed && (
+              <Text style={{ marginRight: 16 }}>
+                SIEM Installation & Management
+              </Text>
+            )}
+            
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Button type="text" style={{ height: 48, marginLeft: 8 }}>
+                <Avatar icon={<UserOutlined />} style={{ marginRight: 8 }} />
+                {user?.username}
+              </Button>
+            </Dropdown>
+          </div>
+        </Header>
+
+        <Content style={{ 
+          margin: '24px 16px', 
+          padding: 24, 
+          background: darkMode ? '#141414' : '#fff',
+          borderRadius: 4,
+          minHeight: 280
+        }}>
           {children}
-        </Container>
-      </Box>
-    </Box>
+        </Content>
+      </AntLayout>
+    </AntLayout>
   );
 };
 
-export default Layout; 
+export default AppLayout; 

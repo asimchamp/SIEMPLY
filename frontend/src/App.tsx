@@ -1,30 +1,16 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { 
-  ThemeProvider, 
-  createTheme, 
-  CssBaseline 
-} from '@mui/material'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { ConfigProvider, theme } from 'antd'
 
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import HostManagement from './pages/HostManagement'
 import JobHistory from './pages/JobHistory'
 import Settings from './pages/Settings'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import NotFound from './pages/NotFound'
-
-// Create theme instance
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-})
-
-const lightTheme = createTheme({
-  palette: {
-    mode: 'light',
-  },
-})
+import { AuthProvider, RequireAuth } from './services/authContext'
 
 function App() {
   const [darkMode, setDarkMode] = useState(true)
@@ -34,18 +20,62 @@ function App() {
   }
   
   return (
-    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-      <CssBaseline />
-      <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+    <ConfigProvider
+      theme={{
+        algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      }}
+    >
+      <AuthProvider>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/hosts" element={<HostManagement />} />
-          <Route path="/jobs" element={<JobHistory />} />
-          <Route path="/settings" element={<Settings />} />
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {/* Protected routes */}
+          <Route path="/" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <Dashboard />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/dashboard" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <Dashboard />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/hosts" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <HostManagement />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/jobs" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <JobHistory />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/settings" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <Settings />
+              </Layout>
+            </RequireAuth>
+          } />
+          
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* 404 page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Layout>
-    </ThemeProvider>
+      </AuthProvider>
+    </ConfigProvider>
   )
 }
 

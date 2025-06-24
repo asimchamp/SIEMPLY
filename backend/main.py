@@ -22,6 +22,10 @@ from backend.config.settings import settings
 from backend.models import get_db, Base, engine
 from backend.api.hosts import router as hosts_router
 from backend.api.jobs import router as jobs_router
+from backend.api.auth import router as auth_router
+from backend.api.configs import router as configs_router
+from backend.api.scheduler import router as scheduler_router
+from backend.api.monitoring import router as monitoring_router
 
 # Configure logging
 logging.basicConfig(
@@ -51,6 +55,10 @@ app.add_middleware(
 # Include routers
 app.include_router(hosts_router)
 app.include_router(jobs_router)
+app.include_router(auth_router)
+app.include_router(configs_router)
+app.include_router(scheduler_router)
+app.include_router(monitoring_router)
 
 # Root API route
 @app.get("/")
@@ -62,7 +70,11 @@ async def root():
         "endpoints": {
             "hosts": "/hosts",
             "jobs": "/jobs",
-            "health": "/health"
+            "health": "/health",
+            "auth": "/auth",
+            "configs": "/configs",
+            "scheduler": "/scheduler",
+            "monitoring": "/monitoring"
         }
     }
 
