@@ -10,6 +10,10 @@ SIEMply is a centralized platform for installing, configuring, and managing Splu
 - **SSH Automation**: Secure remote execution with retry logic and timeout handling
 - **Customizable Ports**: Configure both API and UI on custom ports (API: 5000, UI: 8500)
 - **Modern UI**: Responsive React-based interface with dark/light mode
+- **Role-Based Access Control**: Secure authentication with role-based permissions
+- **Configuration Push**: Deploy configuration files to Splunk and Cribl instances
+- **Task Scheduling**: Schedule recurring tasks and monitor their execution
+- **Monitoring**: Track the status and health of your SIEM infrastructure
 
 ## Project Structure
 
@@ -42,7 +46,40 @@ SIEMply/
 - Node.js 16+
 - npm or yarn
 
-## Getting Started
+## Quick Start
+
+The easiest way to get started is to use our setup script:
+
+```
+./setup_siemply.sh
+```
+
+This script will:
+1. Configure environment settings
+2. Set up network binding for both frontend and backend
+3. Create an admin user
+4. Generate a secure secret key
+5. Create necessary configuration files
+
+After running the setup script, start the application:
+
+```
+# Terminal 1: Start the backend
+./start_backend.sh
+
+# Terminal 2: Start the frontend
+./start_frontend.sh
+```
+
+Then visit:
+- Main application: http://YOUR_IP:8500
+- Settings update page: http://YOUR_IP:8500/update-settings.html (visit this first)
+
+Log in with:
+- Username: admin
+- Password: admin123
+
+## Manual Setup
 
 ### Backend Setup
 
@@ -59,25 +96,29 @@ SIEMply/
    ```
 
 3. Configure environment:
-   - Create `.env` file in the backend directory with the following content:
+   - Create `.env` file in the root directory with the following content:
    ```
-   SIEMPLY_DB_TYPE=sqlite
-   SIEMPLY_DB_URI=sqlite:///./siemply.db
    SIEMPLY_API_PORT=5000
-   SIEMPLY_API_HOST=0.0.0.0
-   SIEMPLY_DEBUG=true
    SIEMPLY_UI_PORT=8500
+   SIEMPLY_DB_URI=sqlite:///backend/siemply.db
    SIEMPLY_SECRET_KEY=your-secret-key-here
+   SIEMPLY_FRONTEND_URL=http://localhost:8500
    ```
 
 4. Initialize the database:
    ```
-   python init_db.py
+   python backend/init_db.py
    ```
 
-5. Start the backend server:
+5. Create an admin user:
    ```
-   python main.py --port 5000
+   python backend/create_admin.py --username admin --password admin123
+   ```
+
+6. Start the backend server:
+   ```
+   cd backend
+   python main.py --host 0.0.0.0
    ```
 
 ### Frontend Setup
@@ -88,16 +129,16 @@ SIEMply/
    npm install
    ```
 
-2. Fix TypeScript type definitions:
+2. Create `.env` file in the frontend directory:
    ```
-   ./fix-typescript.sh
+   VITE_API_URL=http://YOUR_IP:5000
    ```
 
 3. Start the development server:
    ```
-   npm run dev
+   npm run dev -- --port 8500 --host 0.0.0.0
    ```
-   This will start the UI on port 8500 (http://localhost:8500)
+   This will start the UI on port 8500 (http://YOUR_IP:8500)
 
 ## Development Workflow
 
@@ -131,12 +172,22 @@ This project enforces strict code quality standards through linting and type che
   - Database models
   - SSH automation framework
   - Custom port configuration
-
-### In Progress
-- 🔄 Backend API Development (Phase 2)
-- 🔄 Frontend UI (Phase 3)
-- 🔄 Advanced Features (Phase 4)
+- ✅ Backend API Development (Phase 2)
+  - Host management endpoints
+  - Job tracking and execution
+  - SSH automation
+  - Installer scripts
+- ✅ Frontend UI (Phase 3)
+  - Responsive React interface
+  - Host management
+  - Job history and tracking
+  - Installation wizards
+- ✅ Advanced Features (Phase 4)
+  - Authentication and RBAC
+  - Configuration push
+  - Task scheduling
+  - Monitoring
 
 ## License
 
-[Specify your license here] 
+[MIT License] 

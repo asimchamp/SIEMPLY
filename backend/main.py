@@ -7,6 +7,7 @@ import os
 import sys
 import argparse
 import logging
+import socket
 from pathlib import Path
 from typing import List
 
@@ -41,12 +42,29 @@ app = FastAPI(
     description="SIEMply - SIEM Installation & Management System",
 )
 
+# Get server IP address
+def get_server_ip():
+    try:
+        # Get all network interfaces
+        hostname = socket.gethostname()
+        ip_addresses = socket.gethostbyname_ex(hostname)[2]
+        # Filter out localhost
+        ip_addresses = [ip for ip in ip_addresses if not ip.startswith("127.")]
+        if ip_addresses:
+            return ip_addresses[0]
+    except Exception as e:
+        logger.warning(f"Could not automatically detect server IP: {e}")
+    return "localhost"
+
+server_ip = get_server_ip()
+logger.info(f"Detected server IP: {server_ip}")
+
 # Configure CORS
 # Allow specific origins including localhost and your frontend IP
 origins = [
     "http://localhost:8500",
     "http://127.0.0.1:8500",
-    "http://172.20.10.2:8500",  # Your frontend IP
+    f"http://{server_ip}:8500",  # Dynamically detected frontend IP
     # Add any other origins you need
 ]
 

@@ -1,91 +1,127 @@
 #!/usr/bin/env python3
 """
-Fix authentication and CORS issues for SIEMply
+SIEMply Auth Fix Script
+This script fixes authentication issues in the SIEMply application
 """
 import os
 import sys
-import json
 import socket
-import re
+import argparse
+import secrets
+from pathlib import Path
 
-def get_ip_address():
-    """Get the IP address of the machine"""
+# Text colors for console output
+GREEN = '\033[0;32m'
+YELLOW = '\033[1;33m'
+RED = '\033[0;31m'
+BLUE = '\033[0;34m'
+NC = '\033[0m'  # No Color
+
+def print_header():
+    """Print script header"""
+    print(f"{BLUE}======================================{NC}")
+    print(f"{BLUE}  SIEMply Auth Fix                  {NC}")
+    print(f"{BLUE}======================================{NC}")
+
+def get_server_ip():
+    """Get server IP address"""
     try:
-        # Create a socket to determine the IP address
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip_address = s.getsockname()[0]
-        s.close()
-        return ip_address
-    except:
-        return "127.0.0.1"
+        # Get all network interfaces
+        hostname = socket.gethostname()
+        ip_addresses = socket.gethostbyname_ex(hostname)[2]
+        # Filter out localhost
+        ip_addresses = [ip for ip in ip_addresses if not ip.startswith("127.")]
+        if ip_addresses:
+            return ip_addresses[0]
+    except Exception as e:
+        print(f"{YELLOW}Could not automatically detect server IP: {e}{NC}")
+    
+    # Ask user for IP address
+    print(f"{YELLOW}Please enter the server IP address:{NC}")
+    server_ip = input("> ")
+    
+    if not server_ip:
+        print(f"{RED}✗ No IP address provided. Using localhost.{NC}")
+        return "localhost"
+    
+    return server_ip
 
-def fix_cors():
-    """Fix CORS configuration in main.py"""
-    ip_address = get_ip_address()
-    print(f"Detected IP address: {ip_address}")
+def create_env_file(server_ip):
+    """Create or update .env file"""
+    print(f"\n{YELLOW}Creating/updating .env file...{NC}")
     
-    # Read the main.py file
-    with open("backend/main.py", "r") as f:
-        content = f.read()
+    # Get script directory
+    script_dir = Path(__file__).parent
+    env_file = script_dir / ".env"
     
-    # Define the new CORS configuration
-    cors_config = f'''# Configure CORS
-# Allow specific origins including localhost and your frontend IP
-origins = [
-    "http://localhost:8500",
-    "http://127.0.0.1:8500",
-    "http://{ip_address}:8500",  # Your frontend IP
-    # Add any other origins you need
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)'''
+    # Generate a random secret key
+    secret_key = secrets.token_hex(32)
     
-    # Replace the CORS configuration
-    pattern = r'# Configure CORS.*?expose_headers=\[".*?"\],?\n\)'
-    new_content = re.sub(pattern, cors_config, content, flags=re.DOTALL)
-    
-    # Write the updated content back to main.py
-    with open("backend/main.py", "w") as f:
-        f.write(new_content)
-    
-    print("CORS configuration updated in backend/main.py")
-
-def update_api_url():
-    """Update API URL in frontend .env file"""
-    ip_address = get_ip_address()
-    
-    # Create or update .env file
-    with open("frontend/.env", "w") as f:
-        f.write(f"VITE_API_URL=http://{ip_address}:5000\n")
-    
-    print(f"API URL updated in frontend/.env to http://{ip_address}:5000")
+    # Check if .env file exists
+    if env_file.exists():
+        print(f"{YELLOW}Updating existing .env file...{NC}")
+        
+        # Read existing content
+        with open(env_file, 'r') as f:
+            content = f.read()
+        
+        # Check if SECRET_KEY already exists
+        if "SIEMPLY_SECRET_KEY" in content:
+            print(f"{GREEN}✓ SECRET_KEY already exists in .env file{NC}")
+        else:
+            # Add SECRET_KEY to .env file
+            with open(env_file, 'a') as f:
+                f.write(f"\nSIEMPLY_SECRET_KEY={secret_key}\n")
+            print(f"{GREEN}✓ SECRET_KEY added to .env file{NC}")
+        
+        # Check if FRONTEND_URL already exists
+        if "SIEMPLY_FRONTEND_URL" in content:
+            # Update FRONTEND_URL
+            lines = content.split('\n')
+            with open(env_file, 'w') as f:
+                for line in lines:
+                    if line.startswith("SIEMPLY_FRONTEND_URL="):
+                        f.write(f"SIEMPLY_FRONTEND_URL=http://{server_ip}:8500\n")
+                    else:
+                        f.write(f"{line}\n")
+            print(f"{GREEN}✓ FRONTEND_URL updated in .env file{NC}")
+        else:
+            # Add FRONTEND_URL to .env file
+            with open(env_file, 'a') as f:
+                f.write(f"\nSIEMPLY_FRONTEND_URL=http://{server_ip}:8500\n")
+            print(f"{GREEN}✓ FRONTEND_URL added to .env file{NC}")
+    else:
+        print(f"{YELLOW}Creating new .env file...{NC}")
+        
+        # Create .env file
+        with open(env_file, 'w') as f:
+            f.write(f"""# SIEMply Environment Configuration
+SIEMPLY_API_PORT=5000
+SIEMPLY_UI_PORT=8500
+SIEMPLY_DB_URI=sqlite:///backend/siemply.db
+SIEMPLY_SECRET_KEY={secret_key}
+SIEMPLY_FRONTEND_URL=http://{server_ip}:8500
+""")
+        print(f"{GREEN}✓ New .env file created{NC}")
 
 def main():
     """Main function"""
-    print("Fixing authentication and CORS issues for SIEMply...")
+    print_header()
     
-    fix_cors()
-    update_api_url()
+    # Get server IP address
+    server_ip = get_server_ip()
+    print(f"\n{YELLOW}Server IP address:{NC} {server_ip}")
     
-    print("\nChanges applied successfully!")
-    print("\nNext steps:")
-    print("1. Restart the backend server:")
-    print("   ./start_backend.sh")
-    print("2. Restart the frontend server:")
-    print("   ./start_frontend.sh")
-    print("3. Log in with:")
-    print("   Username: admin")
-    print("   Password: admin123")
-    print("\nNote: If you haven't created an admin user yet, run:")
-    print("   cd backend && python3 -m pip install -r requirements.txt && python3 create_admin.py")
+    # Create/update .env file
+    create_env_file(server_ip)
+    
+    print(f"\n{GREEN}======================================{NC}")
+    print(f"{GREEN}      Auth Fix Complete!             {NC}")
+    print(f"{GREEN}======================================{NC}")
+    print(f"\nYou should now be able to authenticate with the API server.")
+    print(f"Please restart the application to apply the changes.")
+    print(f"\nThen open the application in your browser:")
+    print(f"  {BLUE}http://{server_ip}:8500{NC}")
 
 if __name__ == "__main__":
     main() 
