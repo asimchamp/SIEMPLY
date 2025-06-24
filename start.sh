@@ -19,10 +19,22 @@ if [ -z "$SERVER_IP" ]; then
     SERVER_IP="localhost"
 fi
 
+# Check if virtual environment exists
+if [ ! -d "$SCRIPT_DIR/venv" ]; then
+    echo -e "${YELLOW}Creating virtual environment...${NC}"
+    python3 -m venv "$SCRIPT_DIR/venv"
+    
+    # Activate virtual environment and install dependencies
+    source "$SCRIPT_DIR/venv/bin/activate"
+    pip install -r "$SCRIPT_DIR/backend/requirements.txt"
+else
+    # Activate virtual environment
+    source "$SCRIPT_DIR/venv/bin/activate"
+fi
+
 # Start backend
 echo "Starting SIEMply Backend..."
 cd "$SCRIPT_DIR"
-source venv/bin/activate 2>/dev/null || true
 cd backend
 python main.py --host 0.0.0.0 > ../backend.log 2>&1 &
 BACKEND_PID=$!

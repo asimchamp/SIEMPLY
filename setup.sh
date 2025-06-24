@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# SIEMply Project Setup Script
-# This script sets up the SIEMply project environment and starts the servers
+# SIEMply Setup Script
+# This script sets up the SIEMply environment
 
 # Text colors
 GREEN='\033[0;32m'
@@ -12,176 +12,201 @@ NC='\033[0m' # No Color
 
 # Print header
 echo -e "${BLUE}======================================${NC}"
-echo -e "${BLUE}      SIEMply Project Setup          ${NC}"
+echo -e "${BLUE}  SIEMply Setup Script               ${NC}"
 echo -e "${BLUE}======================================${NC}"
 
 # Get script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
 
-# Check if Python 3 is installed
-echo -e "\n${YELLOW}Checking Python installation...${NC}"
+# Get server IP address
+SERVER_IP=$(hostname -I | awk '{print $1}')
+if [ -z "$SERVER_IP" ]; then
+    echo -e "${YELLOW}Could not automatically detect server IP.${NC}"
+    echo -e "${YELLOW}Please enter the server IP address:${NC}"
+    read -p "> " SERVER_IP
+    
+    if [ -z "$SERVER_IP" ]; then
+        echo -e "${RED}✗ No IP address provided. Using localhost.${NC}"
+        SERVER_IP="localhost"
+    fi
+fi
+
+echo -e "\n${YELLOW}Server IP address:${NC} $SERVER_IP"
+
+# Step 1: Check system dependencies
+echo -e "\n${YELLOW}Step 1: Checking system dependencies...${NC}"
+
+# Check Python
 if command -v python3 &>/dev/null; then
-    PYTHON_VERSION=$(python3 --version)
-    echo -e "${GREEN}✓ Python is installed: $PYTHON_VERSION${NC}"
+    PYTHON_VERSION=$(python3 --version | cut -d ' ' -f 2)
+    echo -e "${GREEN}✓ Python $PYTHON_VERSION is installed${NC}"
 else
-    echo -e "${RED}✗ Python 3 is not installed. Please install Python 3.8 or higher.${NC}"
+    echo -e "${RED}✗ Python 3 is not installed${NC}"
+    echo -e "${YELLOW}Please install Python 3.8 or higher${NC}"
     exit 1
 fi
 
-# Check if Node.js is installed
-echo -e "\n${YELLOW}Checking Node.js installation...${NC}"
+# Check pip
+if command -v pip3 &>/dev/null; then
+    PIP_VERSION=$(pip3 --version | cut -d ' ' -f 2)
+    echo -e "${GREEN}✓ pip $PIP_VERSION is installed${NC}"
+else
+    echo -e "${RED}✗ pip is not installed${NC}"
+    echo -e "${YELLOW}Please install pip${NC}"
+    exit 1
+fi
+
+# Check Node.js
 if command -v node &>/dev/null; then
     NODE_VERSION=$(node --version)
-    echo -e "${GREEN}✓ Node.js is installed: $NODE_VERSION${NC}"
+    echo -e "${GREEN}✓ Node.js $NODE_VERSION is installed${NC}"
 else
-    echo -e "${RED}✗ Node.js is not installed. Please install Node.js 16 or higher.${NC}"
+    echo -e "${RED}✗ Node.js is not installed${NC}"
+    echo -e "${YELLOW}Please install Node.js 16 or higher${NC}"
     exit 1
 fi
 
-# Setup virtual environment
-echo -e "\n${YELLOW}Setting up Python virtual environment...${NC}"
-if [ -d "venv" ]; then
+# Check npm
+if command -v npm &>/dev/null; then
+    NPM_VERSION=$(npm --version)
+    echo -e "${GREEN}✓ npm $NPM_VERSION is installed${NC}"
+else
+    echo -e "${RED}✗ npm is not installed${NC}"
+    echo -e "${YELLOW}Please install npm${NC}"
+    exit 1
+fi
+
+# Step 2: Create Python virtual environment
+echo -e "\n${YELLOW}Step 2: Setting up Python virtual environment...${NC}"
+if [ -d "$SCRIPT_DIR/venv" ]; then
     echo -e "${GREEN}✓ Virtual environment already exists${NC}"
 else
-    echo -e "Creating virtual environment..."
-    python3 -m venv venv
+    echo -e "${YELLOW}Creating virtual environment...${NC}"
+    python3 -m venv "$SCRIPT_DIR/venv"
     if [ $? -ne 0 ]; then
-        echo -e "${RED}✗ Failed to create virtual environment. Please install python3-venv package.${NC}"
-        echo -e "${YELLOW}On Ubuntu/Debian: sudo apt install python3-venv${NC}"
-        echo -e "${YELLOW}On RHEL/CentOS: sudo yum install python3-devel${NC}"
+        echo -e "${RED}✗ Failed to create virtual environment${NC}"
+        echo -e "${YELLOW}Please install python3-venv:${NC} sudo apt install python3-venv"
         exit 1
     fi
     echo -e "${GREEN}✓ Virtual environment created${NC}"
 fi
 
 # Activate virtual environment
-echo -e "\n${YELLOW}Activating virtual environment...${NC}"
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    # Windows
-    source venv/Scripts/activate
-else
-    # Linux/macOS
-    source venv/bin/activate
-fi
+echo -e "${YELLOW}Activating virtual environment...${NC}"
+source "$SCRIPT_DIR/venv/bin/activate"
 echo -e "${GREEN}✓ Virtual environment activated${NC}"
 
-# Install backend dependencies
-echo -e "\n${YELLOW}Installing backend dependencies...${NC}"
-pip install -r backend/requirements.txt
+# Step 3: Install Python dependencies
+echo -e "\n${YELLOW}Step 3: Installing Python dependencies...${NC}"
+pip install --upgrade pip
+pip install -r "$SCRIPT_DIR/backend/requirements.txt"
 if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ Failed to install backend dependencies${NC}"
+    echo -e "${RED}✗ Failed to install Python dependencies${NC}"
     exit 1
 fi
+echo -e "${GREEN}✓ Python dependencies installed${NC}"
 
-# Install pydantic-settings for Pydantic v2 compatibility
-echo -e "\n${YELLOW}Installing pydantic-settings for Pydantic v2 compatibility...${NC}"
-pip install pydantic-settings
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ Failed to install pydantic-settings${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ pydantic-settings installed${NC}"
-
-echo -e "${GREEN}✓ Backend dependencies installed${NC}"
-
-# Fix BaseSettings import in settings.py
-echo -e "\n${YELLOW}Fixing BaseSettings import in settings.py...${NC}"
-SETTINGS_FILE="backend/config/settings.py"
-if [ -f "$SETTINGS_FILE" ]; then
-    # Create a backup of the original file
-    cp "$SETTINGS_FILE" "${SETTINGS_FILE}.bak"
-    
-    # Check if we need to fix the Field import
-    if grep -q "from pydantic_settings import BaseSettings, Field" "$SETTINGS_FILE"; then
-        # Update the import statements
-        sed -i.bak 's/from pydantic_settings import BaseSettings, Field/from pydantic import Field\nfrom pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
-        if [ $? -ne 0 ]; then
-            # If sed fails (e.g., on macOS), try with different syntax
-            sed -i '' 's/from pydantic_settings import BaseSettings, Field/from pydantic import Field\nfrom pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
-        fi
-        echo -e "${GREEN}✓ Field import fixed${NC}"
-    # Check if we need to fix just the BaseSettings import
-    elif grep -q "from pydantic import BaseSettings" "$SETTINGS_FILE"; then
-        # Update the import statement
-        sed -i.bak 's/from pydantic import BaseSettings/from pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
-        if [ $? -ne 0 ]; then
-            # If sed fails (e.g., on macOS), try with different syntax
-            sed -i '' 's/from pydantic import BaseSettings/from pydantic_settings import BaseSettings/' "$SETTINGS_FILE"
-        fi
-        echo -e "${GREEN}✓ BaseSettings import fixed${NC}"
-    else
-        echo -e "${GREEN}✓ Imports already correct${NC}"
-    fi
-else
-    echo -e "${YELLOW}⚠ Settings file not found at $SETTINGS_FILE${NC}"
-fi
-
-# Install frontend dependencies
-echo -e "\n${YELLOW}Installing frontend dependencies...${NC}"
-cd frontend
+# Step 4: Install Node.js dependencies
+echo -e "\n${YELLOW}Step 4: Installing Node.js dependencies...${NC}"
+cd "$SCRIPT_DIR/frontend"
 npm install
 if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ Failed to install frontend dependencies${NC}"
+    echo -e "${RED}✗ Failed to install Node.js dependencies${NC}"
     exit 1
 fi
-cd ..
-echo -e "${GREEN}✓ Frontend dependencies installed${NC}"
+echo -e "${GREEN}✓ Node.js dependencies installed${NC}"
+cd "$SCRIPT_DIR"
 
-# Check if .env file exists, create if not
-echo -e "\n${YELLOW}Checking environment configuration...${NC}"
-if [ ! -f ".env" ]; then
-    echo -e "Creating default .env file..."
-    # Generate a random secret key
-    SECRET_KEY=$(openssl rand -hex 32)
-    
-    # Get server IP address
-    SERVER_IP=$(hostname -I | awk '{print $1}')
-    if [ -z "$SERVER_IP" ]; then
-        SERVER_IP="localhost"
+# Step 5: Create .env file
+echo -e "\n${YELLOW}Step 5: Creating .env file...${NC}"
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    # Check if SECRET_KEY already exists in .env
+    if grep -q "SIEMPLY_SECRET_KEY" "$SCRIPT_DIR/.env"; then
+        echo -e "${GREEN}✓ SIEMPLY_SECRET_KEY already exists in .env file${NC}"
+    else
+        # Generate a random secret key
+        echo -e "${YELLOW}Generating a new SECRET_KEY...${NC}"
+        SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
+        
+        # Add SECRET_KEY to .env file
+        echo "SIEMPLY_SECRET_KEY=${SECRET_KEY}" >> "$SCRIPT_DIR/.env"
+        echo -e "${GREEN}✓ SIEMPLY_SECRET_KEY added to .env file${NC}"
     fi
+else
+    echo -e "${YELLOW}⚠ .env file not found, creating one...${NC}"
     
-    cat > .env << EOL
+    # Generate a random secret key
+    SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
+    
+    # Create .env file with SECRET_KEY
+    cat > "$SCRIPT_DIR/.env" << EOL
 # SIEMply Environment Configuration
 SIEMPLY_API_PORT=5000
 SIEMPLY_UI_PORT=8500
-SIEMPLY_DB_URI=sqlite:///siemply.db
+SIEMPLY_DB_URI=sqlite:///backend/siemply.db
 SIEMPLY_SECRET_KEY=${SECRET_KEY}
 SIEMPLY_FRONTEND_URL=http://${SERVER_IP}:8500
 EOL
-    echo -e "${GREEN}✓ Default .env file created${NC}"
-else
-    echo -e "${GREEN}✓ .env file already exists${NC}"
+    echo -e "${GREEN}✓ New .env file created with SECRET_KEY${NC}"
 fi
 
-# Configure frontend API connection
-echo -e "\n${YELLOW}Configuring frontend API connection...${NC}"
-# Get server IP address
-SERVER_IP=$(hostname -I | awk '{print $1}')
-if [ -z "$SERVER_IP" ]; then
-    SERVER_IP="localhost"
-fi
+# Step 6: Create frontend .env file
+echo -e "\n${YELLOW}Step 6: Creating frontend .env file...${NC}"
+FRONTEND_ENV_FILE="$SCRIPT_DIR/frontend/.env"
 
-# Add FRONTEND_URL to .env if not already present
-if ! grep -q "SIEMPLY_FRONTEND_URL" .env; then
-    echo "SIEMPLY_FRONTEND_URL=http://${SERVER_IP}:8500" >> .env
-    echo -e "${GREEN}✓ Added FRONTEND_URL to .env file${NC}"
-fi
-
-# Create .env file for frontend
-mkdir -p frontend
-cat > frontend/.env << EOL
+# Create .env file
+cat > "$FRONTEND_ENV_FILE" << EOL
 # SIEMply Frontend Environment Variables
 VITE_API_URL=http://${SERVER_IP}:5000
 EOL
-echo -e "${GREEN}✓ Frontend .env file created${NC}"
 
-# Create update-settings.html for localStorage
-cat > frontend/public/update-settings.html << EOL
+echo -e "${GREEN}✓ Frontend .env file created with API URL: http://${SERVER_IP}:5000${NC}"
+
+# Step 7: Create update-settings.html for localStorage
+echo -e "\n${YELLOW}Step 7: Creating localStorage update page...${NC}"
+
+# Create public directory if it doesn't exist
+mkdir -p "$SCRIPT_DIR/frontend/public"
+
+# Create update-settings.html
+cat > "$SCRIPT_DIR/frontend/public/update-settings.html" << EOL
 <!DOCTYPE html>
 <html>
 <head>
     <title>Update SIEMply Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1890ff;
+        }
+        .success {
+            color: #52c41a;
+            font-weight: bold;
+        }
+        .api-url {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .countdown {
+            font-weight: bold;
+            color: #1890ff;
+        }
+    </style>
     <script>
         // Update localStorage settings
         const settings = {
@@ -192,92 +217,81 @@ cat > frontend/public/update-settings.html << EOL
             defaultInstallDir: '/opt'
         };
         
-        localStorage.setItem('siemply_settings', JSON.stringify(settings));
-        document.write('<p>Settings updated successfully!</p>');
-        document.write('<p>API URL set to: ' + settings.apiUrl + '</p>');
-        
-        // Redirect after 3 seconds
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 3000);
+        window.onload = function() {
+            // Save settings to localStorage
+            localStorage.setItem('siemply_settings', JSON.stringify(settings));
+            
+            // Update display
+            document.getElementById('apiUrl').textContent = settings.apiUrl;
+            
+            // Countdown timer
+            let seconds = 5;
+            const countdownElement = document.getElementById('countdown');
+            const timer = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }
     </script>
 </head>
 <body>
-    <h1>SIEMply Settings Update</h1>
-    <p>This page updates the localStorage settings for SIEMply.</p>
-    <p>You will be redirected to the main application in 3 seconds...</p>
+    <div class="container">
+        <h1>SIEMply Settings Update</h1>
+        <p class="success">✅ Settings updated successfully!</p>
+        <p>API URL set to: <span class="api-url" id="apiUrl"></span></p>
+        <p>This page updates the localStorage settings for SIEMply.</p>
+        <p>You will be redirected to the main application in <span class="countdown" id="countdown">5</span> seconds...</p>
+    </div>
 </body>
 </html>
 EOL
+
 echo -e "${GREEN}✓ Settings update page created${NC}"
 
-# Initialize database
-echo -e "\n${YELLOW}Initializing database...${NC}"
-cd backend
-python init_db.py
+# Step 8: Initialize database
+echo -e "\n${YELLOW}Step 8: Initializing database...${NC}"
+cd "$SCRIPT_DIR"
+python backend/init_db.py
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Failed to initialize database${NC}"
     exit 1
 fi
-cd ..
 echo -e "${GREEN}✓ Database initialized${NC}"
 
-# Create start script for backend
-echo -e "\n${YELLOW}Creating start scripts...${NC}"
-cat > start_backend.sh << EOL
-#!/bin/bash
-# Start SIEMply backend server
-source venv/bin/activate
-cd backend
-python main.py
-EOL
-chmod +x start_backend.sh
-
-# Create start script for frontend
-cat > start_frontend.sh << EOL
-#!/bin/bash
-# Start SIEMply frontend server
-cd frontend
-npm run dev -- --port 8500 --host 0.0.0.0
-EOL
-chmod +x start_frontend.sh
-
-echo -e "${GREEN}✓ Start scripts created${NC}"
-
-# Create combined start script
-cat > start.sh << EOL
-#!/bin/bash
-# Start both backend and frontend servers
-echo "Starting SIEMply Backend..."
-./start_backend.sh &
-BACKEND_PID=\$!
-
-echo "Starting SIEMply Frontend..."
-./start_frontend.sh &
-FRONTEND_PID=\$!
-
-# Get server IP address
-SERVER_IP=\$(hostname -I | awk '{print \$1}')
-if [ -z "\$SERVER_IP" ]; then
-    SERVER_IP="localhost"
+# Step 9: Create admin user
+echo -e "\n${YELLOW}Step 9: Creating admin user...${NC}"
+cd "$SCRIPT_DIR"
+python backend/create_admin.py --username admin --email admin@example.com --password admin123 --full-name "SIEMply Admin"
+if [ $? -ne 0 ]; then
+    echo -e "${RED}✗ Failed to create admin user${NC}"
+    exit 1
 fi
+echo -e "${GREEN}✓ Admin user created${NC}"
 
-echo "Both servers are running."
-echo "Frontend should be accessible at: http://\$SERVER_IP:8500"
-echo "Backend should be accessible at: http://\$SERVER_IP:5000"
-echo "Press Ctrl+C to stop."
-trap "kill \$BACKEND_PID \$FRONTEND_PID; exit" INT TERM
-wait
-EOL
-chmod +x start.sh
+# Step 10: Make start scripts executable
+echo -e "\n${YELLOW}Step 10: Making start scripts executable...${NC}"
+chmod +x "$SCRIPT_DIR/start.sh"
+chmod +x "$SCRIPT_DIR/start_backend.sh"
+chmod +x "$SCRIPT_DIR/start_frontend.sh"
+echo -e "${GREEN}✓ Start scripts are now executable${NC}"
 
 echo -e "\n${GREEN}======================================${NC}"
-echo -e "${GREEN}      Setup Complete!                ${NC}"
+echo -e "${GREEN}      Setup Complete!                 ${NC}"
 echo -e "${GREEN}======================================${NC}"
-echo -e "\nTo start the backend server: ${YELLOW}./start_backend.sh${NC}"
-echo -e "To start the frontend server: ${YELLOW}./start_frontend.sh${NC}"
-echo -e "To start both servers: ${YELLOW}./start.sh${NC}"
-echo -e "\nBackend will be available at: ${BLUE}http://${SERVER_IP}:5000${NC}"
-echo -e "Frontend will be available at: ${BLUE}http://${SERVER_IP}:8500${NC}"
-echo -e "\nIMPORTANT: On first run, visit: ${BLUE}http://${SERVER_IP}:8500/update-settings.html${NC}"
-echo -e "This will update your browser settings to connect to the API server." 
+echo -e "\nYou can now start the application:"
+echo -e "  ${YELLOW}./start.sh${NC} (starts both backend and frontend)"
+echo -e "  or separately:"
+echo -e "  ${YELLOW}./start_backend.sh${NC} (in one terminal)"
+echo -e "  ${YELLOW}./start_frontend.sh${NC} (in another terminal)"
+echo -e "\nThen open the application in your browser:"
+echo -e "  ${BLUE}http://${SERVER_IP}:8500${NC}"
+echo -e "\nIMPORTANT: On first run, visit:"
+echo -e "  ${BLUE}http://${SERVER_IP}:8500/update-settings.html${NC}"
+echo -e "This will update your browser settings to connect to the API server."
+echo -e "\nYou can log in with:"
+echo -e "  Username: ${YELLOW}admin${NC}"
+echo -e "  Password: ${YELLOW}admin123${NC}" 

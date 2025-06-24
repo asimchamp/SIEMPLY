@@ -194,6 +194,39 @@ cat > frontend/public/update-settings.html << EOL
 <html>
 <head>
     <title>Update SIEMply Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1890ff;
+        }
+        .success {
+            color: #52c41a;
+            font-weight: bold;
+        }
+        .api-url {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .countdown {
+            font-weight: bold;
+            color: #1890ff;
+        }
+    </style>
     <script>
         // Update localStorage settings
         const settings = {
@@ -204,20 +237,35 @@ cat > frontend/public/update-settings.html << EOL
             defaultInstallDir: '/opt'
         };
         
-        localStorage.setItem('siemply_settings', JSON.stringify(settings));
-        document.write('<p>Settings updated successfully!</p>');
-        document.write('<p>API URL set to: ' + settings.apiUrl + '</p>');
-        
-        // Redirect after 3 seconds
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 3000);
+        window.onload = function() {
+            // Save settings to localStorage
+            localStorage.setItem('siemply_settings', JSON.stringify(settings));
+            
+            // Update display
+            document.getElementById('apiUrl').textContent = settings.apiUrl;
+            
+            // Countdown timer
+            let seconds = 5;
+            const countdownElement = document.getElementById('countdown');
+            const timer = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }
     </script>
 </head>
 <body>
-    <h1>SIEMply Settings Update</h1>
-    <p>This page updates the localStorage settings for SIEMply.</p>
-    <p>You will be redirected to the main application in 3 seconds...</p>
+    <div class="container">
+        <h1>SIEMply Settings Update</h1>
+        <p class="success">✅ Settings updated successfully!</p>
+        <p>API URL set to: <span class="api-url" id="apiUrl"></span></p>
+        <p>This page updates the localStorage settings for SIEMply.</p>
+        <p>You will be redirected to the main application in <span class="countdown" id="countdown">5</span> seconds...</p>
+    </div>
 </body>
 </html>
 EOL
