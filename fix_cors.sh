@@ -75,10 +75,17 @@ if [ -f "$MAIN_PY" ]; then
         # Add the new CORS configuration
         cat >> "$TMP_FILE" << 'EOL'
 # Configure CORS
-# For development, allow all origins
+# Allow specific origins including localhost and your frontend IP
+origins = [
+    "http://localhost:8500",
+    "http://127.0.0.1:8500",
+    "http://${SERVER_IP}:8500",  # Your frontend IP
+    # Add any other origins you need
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -279,4 +286,10 @@ echo -e "\nThen open the application in your browser:"
 echo -e "  ${BLUE}http://${SERVER_IP}:8500${NC}"
 echo -e "\nIMPORTANT: On first run, visit:"
 echo -e "  ${BLUE}http://${SERVER_IP}:8500/update-settings.html${NC}"
-echo -e "This will update your browser settings to connect to the API server." 
+echo -e "This will update your browser settings to connect to the API server."
+
+# Create an admin user
+echo "Creating admin user..."
+python backend/create_admin.py --username admin --email admin@example.com --password admin123 --full-name "SIEMply Admin"
+
+echo "Done. You can now log in with username 'admin' and password 'admin123'" 
