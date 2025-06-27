@@ -5,8 +5,9 @@ Provides secure SSH connectivity with retry logic and timeout handling
 import os
 import time
 import logging
-from typing import Optional, Tuple, Dict, Any, List
+from typing import Optional, Tuple, Dict, Any, List, AsyncIterator
 import paramiko
+from contextlib import asynccontextmanager
 from paramiko.client import SSHClient
 
 from backend.config.settings import settings
@@ -208,3 +209,52 @@ def create_ssh_client_from_host(host_model: Host) -> SIEMplySSHClient:
         password=host_model.password,
         key_path=host_model.ssh_key_path
     ) 
+
+class CommandResult:
+    """Result of a command execution"""
+    def __init__(self, returncode: int, stdout: str, stderr: str):
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+
+
+class AsyncSSHClient:
+    """Async wrapper for SIEMplySSHClient"""
+    def __init__(self, client: SIEMplySSHClient):
+        self.client = client
+        
+    async def run(self, command: str) -> CommandResult:
+        """Run a command asynchronously"""
+        try:
+            returncode, stdout, stderr = self.client.execute_command(command)
+            return CommandResult(returncode, stdout, stderr)
+        except Exception as e:
+            logger.error(f"Error running command: {str(e)}")
+            return CommandResult(1, "", str(e))
+
+
+@asynccontextmanager
+async def get_ssh_client(host: Host) -> AsyncIterator[Optional[AsyncSSHClient]]:
+    """Get an SSH client for a host as an async context manager
+    
+    Args:
+        host: Host model instance
+        
+    Yields:
+        AsyncSSHClient instance or None if connection fails
+    """
+    ssh_client = create_ssh_client_from_host(host)
+    async_client = None
+    
+    try:
+        # Try to connect
+        ssh_client.connect()
+        async_client = AsyncSSHClient(ssh_client)
+        yield async_client
+    except Exception as e:
+        logger.error(f"Failed to connect to {host.hostname}: {str(e)}")
+        yield None
+    finally:
+        # Always disconnect
+        if ssh_client:
+            ssh_client.disconnect() 
