@@ -156,13 +156,15 @@ if [ ! -f ".env" ]; then
 # SIEMply Environment Configuration
 SIEMPLY_API_PORT=5000
 SIEMPLY_UI_PORT=8500
-SIEMPLY_DB_URI=sqlite:///siemply.db
+SIEMPLY_DB_URI=sqlite:////opt/SIEMPLY/backend/siemply.db
 SIEMPLY_SECRET_KEY=${SECRET_KEY}
 SIEMPLY_FRONTEND_URL=http://${SERVER_IP}:8500
 EOL
     echo -e "${GREEN}✓ Default .env file created${NC}"
 else
-    echo -e "${GREEN}✓ .env file already exists${NC}"
+    # Update DB_URI in existing .env file
+    sed -i 's|SIEMPLY_DB_URI=.*|SIEMPLY_DB_URI=sqlite:////opt/SIEMPLY/backend/siemply.db|' .env
+    echo -e "${GREEN}✓ Updated DB_URI in .env file${NC}"
 fi
 
 # Configure frontend API connection
@@ -271,6 +273,13 @@ cat > frontend/public/update-settings.html << EOL
 EOL
 echo -e "${GREEN}✓ Settings update page created${NC}"
 
+# Create database directory and set permissions
+echo -e "\n${YELLOW}Setting up database directory...${NC}"
+mkdir -p /opt/SIEMPLY/backend
+touch /opt/SIEMPLY/backend/siemply.db
+chmod 777 /opt/SIEMPLY/backend/siemply.db
+echo -e "${GREEN}✓ Database file created with proper permissions${NC}"
+
 # Initialize database
 echo -e "\n${YELLOW}Initializing database...${NC}"
 cd backend
@@ -356,6 +365,8 @@ echo -e "${GREEN}✓ Systemd service created${NC}"
 echo -e "\n${YELLOW}Setting proper permissions...${NC}"
 chown -R root:root /opt/SIEMPLY
 chmod +x /opt/SIEMPLY/*.sh
+# Ensure database directory is writable
+chmod -R 755 /opt/SIEMPLY/backend
 echo -e "${GREEN}✓ Permissions set${NC}"
 
 echo -e "\n${GREEN}======================================${NC}"
