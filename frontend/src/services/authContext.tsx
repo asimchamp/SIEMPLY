@@ -95,13 +95,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
-      // Create form data (required for OAuth2 password flow)
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
+      // Create URL search params (proper format for x-www-form-urlencoded)
+      const params = new URLSearchParams();
+      params.append('username', username);
+      params.append('password', password);
 
       // Call the token endpoint
-      const response = await api.post('/auth/token', formData, {
+      const response = await api.post('/auth/token', params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
