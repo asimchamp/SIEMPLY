@@ -8,7 +8,7 @@ SIEMply is a centralized platform for installing, configuring, and managing Splu
 - **Automated Installations**: Deploy Splunk Universal Forwarders, Enterprise instances, and Cribl Stream workers/leaders
 - **Job Tracking**: Monitor installation and configuration jobs with detailed logs
 - **SSH Automation**: Secure remote execution with retry logic and timeout handling
-- **Customizable Ports**: Configure both API and UI on custom ports (API: 5000, UI: 8500)
+- **Customizable Ports**: Configure both API and UI on custom ports (API: 5050, UI: 8500)
 - **Modern UI**: Responsive React-based interface with dark/light mode
 - **Role-Based Access Control**: Secure authentication with role-based permissions
 - **Configuration Push**: Deploy configuration files to Splunk and Cribl instances
@@ -98,7 +98,7 @@ Log in with:
 3. Configure environment:
    - Create `.env` file in the root directory with the following content:
    ```
-   SIEMPLY_API_PORT=5000
+   SIEMPLY_API_PORT=5050
    SIEMPLY_UI_PORT=8500
    SIEMPLY_DB_URI=sqlite:///backend/siemply.db
    SIEMPLY_SECRET_KEY=your-secret-key-here
@@ -131,7 +131,7 @@ Log in with:
 
 2. Create `.env` file in the frontend directory:
    ```
-   VITE_API_URL=http://YOUR_IP:5000
+   VITE_API_URL=http://YOUR_IP:5050
    ```
 
 3. Start the development server:

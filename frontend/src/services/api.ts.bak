@@ -20,7 +20,7 @@ const getApiUrl = () => {
   }
   
   // Fall back to environment variable
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  return import.meta.env.VITE_API_URL || 'http://localhost:5050';
 };
 
 // Create axios instance with base URL and default headers
@@ -282,7 +282,7 @@ export const settingsService = {
     if (!settingsJson) {
       // Return default settings
       return {
-        apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+        apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:5050',
         theme: 'dark',
         defaultSplunkVersion: '9.1.1',
         defaultCriblVersion: '3.4.1',

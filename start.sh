@@ -36,7 +36,7 @@ fi
 echo "Starting SIEMply Backend..."
 cd "$SCRIPT_DIR"
 cd backend
-python main.py --host 0.0.0.0 > ../backend.log 2>&1 &
+python main.py --host 0.0.0.0 --port 5050 > ../backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Initialize database if needed
@@ -71,7 +71,7 @@ fi
 if [ "$BACKEND_RUNNING" = true ] && [ "$FRONTEND_RUNNING" = true ]; then
     echo "Both servers are running."
     echo -e "Frontend should be accessible at: ${BLUE}http://${SERVER_IP}:8500${NC}"
-    echo -e "Backend should be accessible at: ${BLUE}http://${SERVER_IP}:5000${NC}"
+    echo -e "Backend should be accessible at: ${BLUE}http://${SERVER_IP}:5050${NC}"
     echo "Press Ctrl+C to stop."
     
     # Save PIDs to file for later cleanup

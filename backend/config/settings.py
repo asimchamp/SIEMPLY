@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     
     # API Server
     API_HOST: str = Field(default="0.0.0.0")
-    API_PORT: int = Field(default=5000)
+    API_PORT: int = Field(default=5050)
     DEBUG: bool = Field(default=False)
     
     # Frontend

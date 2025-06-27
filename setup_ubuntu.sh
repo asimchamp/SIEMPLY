@@ -154,7 +154,7 @@ if [ ! -f ".env" ]; then
     
     cat > .env << EOL
 # SIEMply Environment Configuration
-SIEMPLY_API_PORT=5000
+SIEMPLY_API_PORT=5050
 SIEMPLY_UI_PORT=8500
 SIEMPLY_DB_URI=sqlite:////opt/SIEMPLY/backend/siemply.db
 SIEMPLY_SECRET_KEY=${SECRET_KEY}
@@ -164,7 +164,9 @@ EOL
 else
     # Update DB_URI in existing .env file
     sed -i 's|SIEMPLY_DB_URI=.*|SIEMPLY_DB_URI=sqlite:////opt/SIEMPLY/backend/siemply.db|' .env
-    echo -e "${GREEN}✓ Updated DB_URI in .env file${NC}"
+    # Update API port to avoid conflicts
+    sed -i 's|SIEMPLY_API_PORT=.*|SIEMPLY_API_PORT=5050|' .env
+    echo -e "${GREEN}✓ Updated .env file${NC}"
 fi
 
 # Configure frontend API connection
@@ -185,7 +187,7 @@ fi
 mkdir -p frontend
 cat > frontend/.env << EOL
 # SIEMply Frontend Environment Variables
-VITE_API_URL=http://${SERVER_IP}:5000
+VITE_API_URL=http://${SERVER_IP}:5050
 EOL
 echo -e "${GREEN}✓ Frontend .env file created${NC}"
 
@@ -232,7 +234,7 @@ cat > frontend/public/update-settings.html << EOL
     <script>
         // Update localStorage settings
         const settings = {
-            apiUrl: 'http://${SERVER_IP}:5000',
+            apiUrl: 'http://${SERVER_IP}:5050',
             theme: 'dark',
             defaultSplunkVersion: '9.1.1',
             defaultCriblVersion: '3.4.1',
@@ -298,7 +300,7 @@ cat > start_backend.sh << EOL
 # Start SIEMply backend server
 source /opt/SIEMPLY/venv/bin/activate
 cd /opt/SIEMPLY/backend
-python main.py
+python main.py --port 5050
 EOL
 chmod +x start_backend.sh
 
@@ -331,7 +333,7 @@ fi
 
 echo "Both servers are running."
 echo "Frontend should be accessible at: http://\$SERVER_IP:8500"
-echo "Backend should be accessible at: http://\$SERVER_IP:5000"
+echo "Backend should be accessible at: http://\$SERVER_IP:5050"
 echo "Press Ctrl+C to stop."
 trap "kill \$BACKEND_PID \$FRONTEND_PID; exit" INT TERM
 wait
@@ -380,7 +382,7 @@ echo -e "\nTo start as a system service:"
 echo -e "  ${YELLOW}systemctl start siemply${NC}"
 echo -e "\nTo enable automatic start on boot:"
 echo -e "  ${YELLOW}systemctl enable siemply${NC}"
-echo -e "\nBackend will be available at: ${BLUE}http://${SERVER_IP}:5000${NC}"
+echo -e "\nBackend will be available at: ${BLUE}http://${SERVER_IP}:5050${NC}"
 echo -e "Frontend will be available at: ${BLUE}http://${SERVER_IP}:8500${NC}"
 echo -e "\nIMPORTANT: On first run, visit: ${BLUE}http://${SERVER_IP}:8500/update-settings.html${NC}"
 echo -e "This will update your browser settings to connect to the API server." 

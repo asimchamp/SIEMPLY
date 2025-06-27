@@ -151,7 +151,7 @@ else
     # Create .env file with SECRET_KEY
     cat > "$SCRIPT_DIR/.env" << EOL
 # SIEMply Environment Configuration
-SIEMPLY_API_PORT=5000
+SIEMPLY_API_PORT=5050
 SIEMPLY_UI_PORT=8500
 SIEMPLY_DB_URI=sqlite:///backend/siemply.db
 SIEMPLY_SECRET_KEY=${SECRET_KEY}
@@ -167,10 +167,10 @@ FRONTEND_ENV_FILE="$SCRIPT_DIR/frontend/.env"
 # Create .env file
 cat > "$FRONTEND_ENV_FILE" << EOL
 # SIEMply Frontend Environment Variables
-VITE_API_URL=http://${SERVER_IP}:5000
+VITE_API_URL=http://${SERVER_IP}:5050
 EOL
 
-echo -e "${GREEN}✓ Frontend .env file created with API URL: http://${SERVER_IP}:5000${NC}"
+echo -e "${GREEN}✓ Frontend .env file created with API URL: http://${SERVER_IP}:5050${NC}"
 
 # Step 7: Create update-settings.html for localStorage
 echo -e "\n${YELLOW}Step 7: Creating localStorage update page...${NC}"
@@ -220,7 +220,7 @@ cat > "$SCRIPT_DIR/frontend/public/update-settings.html" << EOL
     <script>
         // Update localStorage settings
         const settings = {
-            apiUrl: 'http://${SERVER_IP}:5000',
+            apiUrl: 'http://${SERVER_IP}:5050',
             theme: 'dark',
             defaultSplunkVersion: '9.1.1',
             defaultCriblVersion: '3.4.1',

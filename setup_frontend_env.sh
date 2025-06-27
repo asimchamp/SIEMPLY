@@ -39,10 +39,10 @@ mkdir -p "$FRONTEND_DIR"
 # Create .env file
 cat > "$ENV_FILE" << EOL
 # SIEMply Frontend Environment Variables
-VITE_API_URL=http://${SERVER_IP}:5000
+VITE_API_URL=http://${SERVER_IP}:5050
 EOL
 
-echo -e "${GREEN}✓ Frontend .env file created with API URL: http://${SERVER_IP}:5000${NC}"
+echo -e "${GREEN}✓ Frontend .env file created with API URL: http://${SERVER_IP}:5050${NC}"
 
 # Create update-settings.html for localStorage
 echo -e "\n${YELLOW}Creating localStorage update page...${NC}"
@@ -92,7 +92,7 @@ cat > "$FRONTEND_DIR/public/update-settings.html" << EOL
     <script>
         // Update localStorage settings
         const settings = {
-            apiUrl: 'http://${SERVER_IP}:5000',
+            apiUrl: 'http://${SERVER_IP}:5050',
             theme: 'dark',
             defaultSplunkVersion: '9.1.1',
             defaultCriblVersion: '3.4.1',

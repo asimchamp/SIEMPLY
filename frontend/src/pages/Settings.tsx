@@ -95,7 +95,7 @@ const Settings: React.FC = () => {
               >
                 <Input 
                   prefix={<ApiOutlined />}
-                  placeholder="http://localhost:5000"
+                  placeholder="http://localhost:5050"
                 />
               </Form.Item>
             </Col>

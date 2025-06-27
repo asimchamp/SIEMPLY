@@ -148,7 +148,7 @@ Every job task (e.g., install Splunk) must:
    ```
    # Backend
    cd backend
-   python main.py --port 5000  # Customizable API port (avoid 8000 as it's used by Splunk)
+   python main.py --port 5050  # Customizable API port (avoid 8000 as it's used by Splunk)
    
    # Frontend
    cd frontend

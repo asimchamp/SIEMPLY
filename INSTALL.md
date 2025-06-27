@@ -229,7 +229,7 @@ If you're seeing "Failed to fetch dashboard data. Please check your connection t
    SERVER_IP=$(hostname -I | awk '{print $1}')
    
    # Create .env file
-   echo "VITE_API_URL=http://${SERVER_IP}:5000" > frontend/.env
+   echo "VITE_API_URL=http://${SERVER_IP}:5050" > frontend/.env
    ```
 
 3. After making these changes, restart the services and visit the update settings page:
@@ -248,7 +248,7 @@ If you encounter port conflicts:
 
 1. Edit the `.env` file to change the ports:
    ```
-   SIEMPLY_API_PORT=5000  # Change to another port if needed
+   SIEMPLY_API_PORT=5050  # Change to another port if needed
    SIEMPLY_UI_PORT=8500   # Change to another port if needed
    ```
 
@@ -256,7 +256,7 @@ If you encounter port conflicts:
 
 ## Accessing the Application
 
-- Backend API: http://localhost:5000
+- Backend API: http://localhost:5050
 - Frontend UI: http://localhost:8500
 
 ## Uninstalling
