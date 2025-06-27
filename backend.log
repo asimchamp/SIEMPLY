@@ -1,0 +1,91 @@
+/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:__main__:Detected server IP: 172.20.10.2
+INFO:__main__:Starting SIEMply API on 0.0.0.0:5000
+Traceback (most recent call last):
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 145, in __init__
+    self._dbapi_connection = engine.raw_connection()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3297, in raw_connection
+    return self.pool.connect()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+    rec = pool._do_get()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 180, in _do_get
+    self._dec_overflow()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    return self._create_connection()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+    self.__connect()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 902, in __connect
+    pool.logger.debug("Error on connect(): %s", e)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+sqlite3.OperationalError: unable to open database file
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/backend/main.py", line 138, in <module>
+    Base.metadata.create_all(bind=engine)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/sql/schema.py", line 5924, in create_all
+    bind._run_ddl_visitor(
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3247, in _run_ddl_visitor
+    with self.begin() as conn:
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/contextlib.py", line 117, in __enter__
+    return next(self.gen)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3237, in begin
+    with self.connect() as conn:
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3273, in connect
+    return self._connection_cls(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 147, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2436, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 145, in __init__
+    self._dbapi_connection = engine.raw_connection()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 3297, in raw_connection
+    return self.pool.connect()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+    rec = pool._do_get()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 180, in _do_get
+    self._dec_overflow()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    return self._create_connection()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+    self.__connect()
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 902, in __connect
+    pool.logger.debug("Error on connect(): %s", e)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/Users/asimakram/Desktop/Cursor/SIEMply/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) unable to open database file
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

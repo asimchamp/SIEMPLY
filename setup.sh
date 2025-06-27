@@ -106,6 +106,16 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "${GREEN}✓ Python dependencies installed${NC}"
 
+# Step 3.5: Fix Pydantic v2 compatibility
+echo -e "\n${YELLOW}Step 3.5: Fixing Pydantic v2 compatibility...${NC}"
+cd "$SCRIPT_DIR"
+python update_models.py
+if [ $? -ne 0 ]; then
+    echo -e "${RED}✗ Failed to fix Pydantic v2 compatibility${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Pydantic v2 compatibility fixed${NC}"
+
 # Step 4: Install Node.js dependencies
 echo -e "\n${YELLOW}Step 4: Installing Node.js dependencies...${NC}"
 cd "$SCRIPT_DIR/frontend"

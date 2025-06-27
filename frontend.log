@@ -1,0 +1,10 @@
+
+> siemply-ui@0.1.0 dev
+> vite --port 8500 --port 8500 --host 0.0.0.0
+
+
+  VITE v4.5.14  ready in 601 ms
+
+  ➜  Local:   http://localhost:8500/
+  ➜  Network: http://172.20.10.2:8500/
+  ➜  Network: http://100.96.0.2:8500/
