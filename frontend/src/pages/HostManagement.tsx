@@ -47,6 +47,7 @@ const HostManagement: React.FC = () => {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [form] = Form.useForm();
   const [testingConnection, setTestingConnection] = useState<boolean>(false);
+  const [checkingAllConnections, setCheckingAllConnections] = useState<boolean>(false);
 
   // Load hosts on component mount
   useEffect(() => {
@@ -111,8 +112,23 @@ const HostManagement: React.FC = () => {
           port: Number(values.port)
         };
         
-        await hostService.createHost(hostData);
+        const newHost = await hostService.createHost(hostData);
         message.success('Host created successfully');
+        
+        // Test connection immediately
+        setTestingConnection(true);
+        try {
+          const result = await hostService.testConnection(newHost.id);
+          if (result.success) {
+            message.success('Connection successful');
+          } else {
+            message.warning(`Connection check: ${result.message}`);
+          }
+        } catch (error) {
+          console.error('Connection test failed:', error);
+        } finally {
+          setTestingConnection(false);
+        }
       } else if (editingHost) {
         // Update existing host
         const hostData: UpdateHostData = {
@@ -123,6 +139,23 @@ const HostManagement: React.FC = () => {
         
         await hostService.updateHost(editingHost.id, hostData);
         message.success('Host updated successfully');
+        
+        // Test connection after update if credentials changed
+        if (values.password || values.ssh_key_path) {
+          setTestingConnection(true);
+          try {
+            const result = await hostService.testConnection(editingHost.id);
+            if (result.success) {
+              message.success('Connection successful');
+            } else {
+              message.warning(`Connection check: ${result.message}`);
+            }
+          } catch (error) {
+            console.error('Connection test failed:', error);
+          } finally {
+            setTestingConnection(false);
+          }
+        }
       }
       
       setIsModalVisible(false);
@@ -166,6 +199,47 @@ const HostManagement: React.FC = () => {
       message.error('Connection test failed');
     } finally {
       setTestingConnection(false);
+    }
+  };
+
+  // Check connections for all hosts
+  const checkAllConnections = async () => {
+    if (hosts.length === 0) {
+      message.info('No hosts to check');
+      return;
+    }
+    
+    setCheckingAllConnections(true);
+    message.info(`Checking connections for ${hosts.length} hosts...`);
+    
+    try {
+      let successCount = 0;
+      let failCount = 0;
+      
+      // Check each host sequentially
+      for (const host of hosts) {
+        try {
+          const result = await hostService.testConnection(host.id);
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (error) {
+          console.error(`Error checking host ${host.hostname}:`, error);
+          failCount++;
+        }
+      }
+      
+      message.success(`Connection check complete: ${successCount} successful, ${failCount} failed`);
+      
+      // Refresh the host list to show updated statuses
+      fetchHosts();
+    } catch (error) {
+      console.error('Error during connection check:', error);
+      message.error('Failed to complete connection checks');
+    } finally {
+      setCheckingAllConnections(false);
     }
   };
 
@@ -214,9 +288,31 @@ const HostManagement: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        const color = status === 'active' ? 'green' : 'orange';
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
-      }
+        let color = 'default';
+        let displayText = status.toUpperCase();
+        
+        switch (status) {
+          case 'online':
+            color = 'green';
+            break;
+          case 'offline':
+            color = 'red';
+            break;
+          case 'unknown':
+            color = 'orange';
+            break;
+          default:
+            color = 'default';
+        }
+        
+        return <Tag color={color}>{displayText}</Tag>;
+      },
+      filters: [
+        { text: 'Online', value: 'online' },
+        { text: 'Offline', value: 'offline' },
+        { text: 'Unknown', value: 'unknown' }
+      ],
+      onFilter: (value: any, record: Host) => record.status === value
     },
     {
       title: 'Actions',
@@ -266,29 +362,42 @@ const HostManagement: React.FC = () => {
         <Text>Manage hosts for Splunk and Cribl deployments</Text>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <Button 
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={showCreateModal}
-        >
-          Add Host
-        </Button>
-        <Button 
-          icon={<SyncOutlined />}
-          onClick={fetchHosts}
-          style={{ marginLeft: 8 }}
-        >
-          Refresh
-        </Button>
-      </div>
-
       <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+          <Title level={4}>
+            <DatabaseOutlined /> Host Management
+          </Title>
+          <Space>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={showCreateModal}
+            >
+              Add Host
+            </Button>
+            <Button
+              icon={<SyncOutlined spin={checkingAllConnections} />}
+              onClick={checkAllConnections}
+              loading={checkingAllConnections}
+            >
+              Check All Connections
+            </Button>
+            <Button
+              icon={<SyncOutlined spin={loading} />}
+              onClick={fetchHosts}
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+          </Space>
+        </div>
+
         <Table
           dataSource={hosts}
           columns={columns}
           rowKey="id"
           loading={loading}
+          pagination={{ pageSize: 10 }}
         />
       </Card>
 

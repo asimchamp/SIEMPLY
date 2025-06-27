@@ -8,12 +8,15 @@ from sqlalchemy.orm import Session
 
 from backend.models import get_db, Host, HostCreate, HostUpdate, HostResponse, HostRole
 from backend.automation.utils import validate_ssh_connection
+import logging
 
 router = APIRouter(
     prefix="/hosts",
     tags=["hosts"],
     responses={404: {"description": "Host not found"}},
 )
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=List[HostResponse])
@@ -54,6 +57,20 @@ async def create_host(host: HostCreate, db: Session = Depends(get_db)):
     db.add(db_host)
     db.commit()
     db.refresh(db_host)
+    
+    # Test connection immediately after creation
+    try:
+        # Test SSH connection
+        connection_result = await validate_ssh_connection(db_host)
+        
+        # Update host status based on connection result
+        db_host.status = "online" if connection_result["success"] else "offline"
+        db.commit()
+        db.refresh(db_host)
+    except Exception as e:
+        # Log the error but don't fail the host creation
+        logger.error(f"Error testing connection to new host {db_host.hostname}: {e}")
+    
     return db_host
 
 
