@@ -65,12 +65,14 @@ origins = [
     "http://localhost:8500",
     "http://127.0.0.1:8500",
     f"http://{server_ip}:8500",  # Dynamically detected frontend IP
-    # Add any other origins you need
+    "http://192.168.100.45:8500",  # Specific IP from error
+    "http://192.168.100.62:8500",  # Additional IP that might be needed
+    "*",  # Allow all origins - only use in development
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allow all origins for now to troubleshoot
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
