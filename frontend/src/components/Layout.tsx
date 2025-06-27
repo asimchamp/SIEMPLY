@@ -19,9 +19,13 @@ import {
   MenuFoldOutlined,
   UserOutlined,
   LogoutOutlined,
-  LockOutlined
+  LockOutlined,
+  AppstoreOutlined,
+  PlusOutlined,
+  CloudDownloadOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../services/authContext';
+import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = AntLayout;
 const { Title, Text } = Typography;
@@ -43,7 +47,8 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
     logout();
   };
 
-  const menuItems = [
+  // Define menu items with submenu for Jobs
+  const menuItems: MenuProps['items'] = [
     {
       key: '/dashboard',
       icon: <DashboardOutlined />,
@@ -55,9 +60,21 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
       label: 'Host Management',
     },
     {
-      key: '/jobs',
-      icon: <HistoryOutlined />,
-      label: 'Job History',
+      key: 'jobs',
+      icon: <AppstoreOutlined />,
+      label: 'Jobs',
+      children: [
+        {
+          key: '/jobs/new',
+          icon: <CloudDownloadOutlined />,
+          label: 'New Job',
+        },
+        {
+          key: '/jobs',
+          icon: <HistoryOutlined />,
+          label: 'Job History',
+        },
+      ],
     },
     {
       key: '/settings',
@@ -66,8 +83,8 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
     },
   ];
 
-  const handleMenuClick = (path: string) => {
-    navigate(path);
+  const handleMenuClick = ({ key }: { key: string }) => {
+    navigate(key);
   };
 
   const userMenuItems = [
@@ -89,6 +106,14 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
       onClick: handleLogout,
     },
   ];
+
+  // Determine which keys should be open based on current path
+  const getOpenKeys = () => {
+    if (location.pathname.startsWith('/jobs')) {
+      return ['jobs'];
+    }
+    return [];
+  };
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
@@ -123,8 +148,9 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
           theme={darkMode ? 'dark' : 'light'}
           mode="inline"
           selectedKeys={[location.pathname]}
+          defaultOpenKeys={getOpenKeys()}
           items={menuItems}
-          onClick={({ key }) => handleMenuClick(key)}
+          onClick={handleMenuClick}
         />
 
         <Divider />
