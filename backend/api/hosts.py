@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.models import get_db, Host, HostCreate, HostUpdate, HostResponse, HostRole
 from backend.automation.utils import validate_ssh_connection
+from backend.automation.system_metrics import get_system_metrics
 import logging
 
 router = APIRouter(
@@ -205,4 +206,23 @@ async def test_host_connection(host_id: int, db: Session = Depends(get_db)):
     db_host.status = "online" if connection_result["success"] else "offline"
     db.commit()
     
-    return connection_result 
+    return connection_result
+
+
+@router.get("/{host_id}/system-metrics", response_model=dict)
+async def get_host_system_metrics(host_id: int, db: Session = Depends(get_db)):
+    """
+    Get system metrics for a host (CPU, RAM, storage, etc.)
+    """
+    # Get host
+    db_host = db.query(Host).filter(Host.id == host_id).first()
+    if db_host is None:
+        raise HTTPException(status_code=404, detail="Host not found")
+    
+    try:
+        # Get system metrics
+        metrics = await get_system_metrics(db_host)
+        return metrics
+    except Exception as e:
+        logger.error(f"Error getting system metrics for host {db_host.hostname}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get system metrics: {str(e)}") 

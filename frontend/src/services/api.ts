@@ -174,6 +174,12 @@ export const hostService = {
     return response.data;
   },
 
+  // Get system metrics for a host
+  async getSystemMetrics(id: number): Promise<Record<string, any>> {
+    const response = await api.get(`/hosts/${id}/system-metrics`);
+    return response.data;
+  },
+
   // Add a role to a host
   async addRole(id: number, role: string): Promise<Host> {
     const response = await api.post(`/hosts/${id}/roles/${role}`);

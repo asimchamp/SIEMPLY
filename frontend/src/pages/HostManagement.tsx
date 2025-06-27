@@ -23,10 +23,12 @@ import {
   EditOutlined, 
   DeleteOutlined, 
   SyncOutlined,
-  LinkOutlined
+  LinkOutlined,
+  DashboardOutlined
 } from '@ant-design/icons';
 import { hostService, Host, CreateHostData, UpdateHostData } from '../services/api';
 import { ColumnType } from 'antd/es/table';
+import HostDetailsModal from '../components/HostDetailsModal';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -48,6 +50,10 @@ const HostManagement: React.FC = () => {
   const [form] = Form.useForm();
   const [testingConnection, setTestingConnection] = useState<boolean>(false);
   const [checkingAllConnections, setCheckingAllConnections] = useState<boolean>(false);
+  
+  // State for host details modal
+  const [detailsModalVisible, setDetailsModalVisible] = useState<boolean>(false);
+  const [selectedHostForDetails, setSelectedHostForDetails] = useState<Host | null>(null);
 
   // Load hosts on component mount
   useEffect(() => {
@@ -243,6 +249,18 @@ const HostManagement: React.FC = () => {
     }
   };
 
+  // Show host details modal
+  const showHostDetails = (host: Host) => {
+    setSelectedHostForDetails(host);
+    setDetailsModalVisible(true);
+  };
+
+  // Close host details modal
+  const handleDetailsModalClose = () => {
+    setDetailsModalVisible(false);
+    setSelectedHostForDetails(null);
+  };
+
   // Define table columns
   const columns: ColumnType<Host>[] = [
     {
@@ -319,6 +337,13 @@ const HostManagement: React.FC = () => {
       key: 'actions',
       render: (_: unknown, record: Host) => (
         <Space size="small">
+          <Tooltip title="View System Metrics">
+            <Button 
+              icon={<DashboardOutlined />} 
+              size="small"
+              onClick={() => showHostDetails(record)}
+            />
+          </Tooltip>
           <Tooltip title="Test Connection">
             <Button 
               icon={<LinkOutlined />} 
@@ -514,6 +539,13 @@ const HostManagement: React.FC = () => {
           )}
         </Form>
       </Modal>
+
+      {/* Host Details Modal */}
+      <HostDetailsModal
+        visible={detailsModalVisible}
+        host={selectedHostForDetails}
+        onClose={handleDetailsModalClose}
+      />
     </div>
   );
 };
