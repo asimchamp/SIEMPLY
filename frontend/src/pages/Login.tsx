@@ -11,6 +11,12 @@ interface LoginFormData {
   password: string;
 }
 
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  first_login: boolean;
+}
+
 const Login: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +34,7 @@ const Login: React.FC = () => {
       formData.append('password', values.password);
 
       // Call the token endpoint
-      const response = await api.post('/auth/token', formData, {
+      const response = await api.post<TokenResponse>('/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -42,8 +48,14 @@ const Login: React.FC = () => {
 
       message.success('Login successful');
 
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Check if this is first login with default password
+      if (response.data.first_login) {
+        message.warning('Please change your default password');
+        navigate('/change-password', { state: { firstLogin: true } });
+      } else {
+        // Redirect to dashboard
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.response?.data?.detail || 'Login failed. Please check your credentials.');

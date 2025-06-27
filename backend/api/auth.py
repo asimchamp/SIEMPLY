@@ -26,6 +26,7 @@ class Token(BaseModel):
     """Token response model"""
     access_token: str
     token_type: str
+    first_login: bool = False
 
 
 class TokenData(BaseModel):
@@ -40,6 +41,12 @@ class UserCreate(BaseModel):
     password: str
     full_name: Optional[str] = None
     role: str = "user"
+
+
+class ChangePasswordRequest(BaseModel):
+    """Change password request model"""
+    current_password: str
+    new_password: str
 
 
 class UserResponse(BaseModel):
@@ -112,12 +119,12 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-async def get_current_admin_user(current_user: User = Depends(get_current_user)):
-    """Get current user with admin privileges"""
+async def get_current_admin_user(current_user: User = Depends(get_current_active_user)):
+    """Get current admin user"""
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
+            detail="Not enough permissions",
         )
     return current_user
 
@@ -144,7 +151,13 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Check if this is a first login with default password
+    first_login = False
+    if user.username == "admin" and User.verify_password("admin", user.hashed_password):
+        first_login = True
+    
+    return {"access_token": access_token, "token_type": "bearer", "first_login": first_login}
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -213,4 +226,26 @@ async def create_admin_user(
     db.commit()
     db.refresh(user)
     
-    return user 
+    return user
+
+
+@router.post("/change-password", status_code=status.HTTP_200_OK)
+async def change_password(
+    password_data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Change user password"""
+    # Verify current password
+    if not User.verify_password(password_data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    # Update password
+    current_user.hashed_password = User.get_password_hash(password_data.new_password)
+    current_user.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return {"message": "Password changed successfully"} 

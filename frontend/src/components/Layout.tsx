@@ -18,7 +18,8 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   UserOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  LockOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../services/authContext';
 
@@ -74,6 +75,12 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
       key: 'profile',
       label: 'Profile',
       icon: <UserOutlined />,
+    },
+    {
+      key: 'change-password',
+      label: 'Change Password',
+      icon: <LockOutlined />,
+      onClick: () => navigate('/change-password'),
     },
     {
       key: 'logout',

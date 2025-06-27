@@ -9,6 +9,7 @@ import JobHistory from './pages/JobHistory'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ChangePassword from './pages/ChangePassword'
 import NotFound from './pages/NotFound'
 import { AuthProvider, RequireAuth } from './services/authContext'
 
@@ -64,6 +65,13 @@ function App() {
             <RequireAuth>
               <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
                 <Settings />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/change-password" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <ChangePassword />
               </Layout>
             </RequireAuth>
           } />
