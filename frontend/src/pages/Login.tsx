@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Form, Input, Button, Typography, Card, message, Divider, Alert } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../services/api';
+import { useAuth } from '../services/authContext';
 
 const { Title, Text } = Typography;
 
@@ -11,16 +11,11 @@ interface LoginFormData {
   password: string;
 }
 
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  first_login: boolean;
-}
-
 const Login: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // Handle login form submission
   const handleSubmit = async (values: LoginFormData) => {
@@ -28,34 +23,11 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Create form data (required for OAuth2 password flow)
-      const formData = new FormData();
-      formData.append('username', values.username);
-      formData.append('password', values.password);
-
-      // Call the token endpoint
-      const response = await api.post<TokenResponse>('/auth/token', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-
-      // Store token in localStorage
-      localStorage.setItem('siemply_token', response.data.access_token);
+      // Use the login function from authContext
+      await login(values.username, values.password);
       
-      // Set the authorization header for future API calls
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
-
       message.success('Login successful');
-
-      // Check if this is first login with default password
-      if (response.data.first_login) {
-        message.warning('Please change your default password');
-        navigate('/change-password', { state: { firstLogin: true } });
-      } else {
-        // Redirect to dashboard
-        navigate('/dashboard');
-      }
+      // Redirection is handled in the authContext
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.response?.data?.detail || 'Login failed. Please check your credentials.');

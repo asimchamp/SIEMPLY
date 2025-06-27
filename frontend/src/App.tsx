@@ -76,9 +76,6 @@ function App() {
             </RequireAuth>
           } />
           
-          {/* Redirect root to dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
           {/* 404 page */}
           <Route path="*" element={<NotFound />} />
         </Routes>

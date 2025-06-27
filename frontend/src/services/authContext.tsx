@@ -115,6 +115,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Get user details
       await checkAuth();
+      
+      // Check if this is first login with default password
+      if (response.data.first_login) {
+        navigate('/change-password', { state: { firstLogin: true } });
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
