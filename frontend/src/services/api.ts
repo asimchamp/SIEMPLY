@@ -226,17 +226,6 @@ export const jobService = {
 
   // Install Splunk Universal Forwarder
   async installSplunkUF(hostId: number, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
-    // Ensure all required parameters are present
-    if (!parameters.version) {
-      throw new Error("Missing required parameter: version");
-    }
-    if (!parameters.run_user) {
-      throw new Error("Missing required parameter: run_user");
-    }
-    if (!parameters.install_dir) {
-      parameters.install_dir = '/opt/splunkforwarder';
-    }
-    
     const response = await api.post('/jobs/install/splunk-uf', { 
       host_id: hostId, 
       parameters, 

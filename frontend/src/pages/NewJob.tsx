@@ -144,7 +144,6 @@ const NewJob: React.FC = () => {
     setInstallType('');
     setIsModalVisible(true);
     setCurrentStep(0);
-    // Reset form fields properly
     form.resetFields();
   };
 
@@ -153,23 +152,15 @@ const NewJob: React.FC = () => {
     setInstallType(type);
     
     // Reset version field based on type
-    if (type === 'splunk_uf') {
+    if (type.includes('splunk')) {
       form.setFieldsValue({ 
         version: '9.4.3',
-        run_user: 'splunk',
-        install_dir: '/opt/splunkforwarder'
-      });
-    } else if (type.includes('splunk')) {
-      form.setFieldsValue({ 
-        version: '9.4.3',
-        run_user: 'splunk',
-        install_dir: '/opt/splunk'
+        run_user: 'splunk'
       });
     } else if (type.includes('cribl')) {
       form.setFieldsValue({ 
         version: '3.4.1',
-        run_user: 'cribl',
-        install_dir: '/opt/cribl'
+        run_user: 'cribl'
       });
     } else if (type.includes('custom_command') || type.includes('bash_script')) {
       form.setFieldsValue({
@@ -178,8 +169,7 @@ const NewJob: React.FC = () => {
       });
     } else {
       form.setFieldsValue({ 
-        run_user: 'root',
-        install_dir: '/opt'
+        run_user: 'root'
       });
     }
   };
@@ -211,39 +201,27 @@ const NewJob: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (): Promise<void> => {
     try {
-      await form.validateFields();
       setLoading(true);
       setError(null);
       
       const values = form.getFieldsValue();
       const { host_id, version, install_dir, is_dry_run, run_user, command } = values;
       
-      // Validate required fields
-      if (!host_id) {
-        throw new Error("Please select a target host");
-      }
-      
       // Prepare parameters based on installation type
       const parameters: Record<string, any> = {
         version,
-        run_user: run_user || 'root'
+        install_dir: install_dir || '/opt',
+        // Map run_user to user for backend compatibility
+        user: run_user || 'root',
+        // Add default admin password if not provided
+        admin_password: values.admin_password || 'changeme'
       };
-      
-      // Set installation directory if provided or use default
-      if (install_dir) {
-        parameters.install_dir = install_dir;
-      } else if (installType.includes('splunk')) {
-        parameters.install_dir = '/opt/splunkforwarder';
-      } else if (installType.includes('cribl')) {
-        parameters.install_dir = '/opt/cribl';
-      }
       
       // Add additional parameters based on installation type
       if (installType === 'splunk_uf') {
         parameters.deployment_server = values.deployment_server;
         parameters.deployment_app = values.deployment_app;
       } else if (installType === 'splunk_enterprise') {
-        parameters.admin_password = values.admin_password;
         parameters.license_master = values.license_master;
       } else if (installType === 'cribl_worker') {
         parameters.leader_url = values.leader_url;
@@ -273,7 +251,9 @@ const NewJob: React.FC = () => {
           job = await jobService.submitCustomJob(host_id, installType, parameters, is_dry_run);
           break;
         default:
-          throw new Error(`Unknown installation type: ${installType}`);
+          // For other types
+          job = await jobService.installSplunkUF(host_id, parameters, is_dry_run);
+          break;
       }
       
       // Update state with job ID
@@ -282,7 +262,7 @@ const NewJob: React.FC = () => {
       message.success('Job submitted successfully');
     } catch (error) {
       console.error('Failed to submit job:', error);
-      setError(error instanceof Error ? error.message : 'Failed to submit installation job. Please try again.');
+      setError('Failed to submit installation job. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -317,7 +297,7 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="install_dir"
             label="Installation Directory"
-            initialValue={installType.includes('splunk_uf') ? '/opt/splunkforwarder' : (installType.includes('splunk') ? '/opt/splunk' : '/opt')}
+            initialValue={installType.includes('splunk') ? '/opt/splunk' : '/opt'}
           >
             <Input placeholder="/opt" />
           </Form.Item>
@@ -722,14 +702,12 @@ const NewJob: React.FC = () => {
             ))}
           </Steps>
           
-          <Form.Provider>
-            <Form
-              form={form}
-              layout="vertical"
-            >
-              {renderStepContent()}
-            </Form>
-          </Form.Provider>
+          <Form
+            form={form}
+            layout="vertical"
+          >
+            {renderStepContent()}
+          </Form>
           
           <div style={{ marginTop: 24, textAlign: 'right' }}>
             {currentStep > 0 && currentStep < 3 && (
