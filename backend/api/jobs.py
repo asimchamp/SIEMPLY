@@ -6,19 +6,39 @@ import uuid
 import asyncio
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query, Body
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.models import get_db, Job, JobCreate, JobUpdate, JobResponse, JobType, JobStatus
 from backend.models import Host
 from backend.installers.splunk import install_splunk_universal_forwarder, install_splunk_enterprise
 from backend.installers.cribl import install_cribl_worker, install_cribl_leader
+from backend.installers.custom import run_custom_command, run_bash_script
 
 router = APIRouter(
     prefix="/jobs",
     tags=["jobs"],
     responses={404: {"description": "Job not found"}},
 )
+
+# Pydantic models for request validation
+class JobRequestBase(BaseModel):
+    host_id: int
+    is_dry_run: bool = False
+
+class SplunkUFInstallRequest(JobRequestBase):
+    parameters: Dict[str, Any] = Field(..., description="Installation parameters")
+
+class SplunkEnterpriseInstallRequest(JobRequestBase):
+    parameters: Dict[str, Any] = Field(..., description="Installation parameters")
+
+class CriblInstallRequest(JobRequestBase):
+    parameters: Dict[str, Any] = Field(..., description="Installation parameters")
+
+class CustomJobRequest(JobRequestBase):
+    job_type: str = Field(..., description="Type of custom job")
+    parameters: Dict[str, Any] = Field(..., description="Job parameters")
 
 
 @router.get("/", response_model=List[JobResponse])
@@ -113,6 +133,12 @@ async def _run_job(job_id: int, db: Session):
         elif job.job_type == JobType.CRIBL_LEADER_INSTALL.value:
             result = await install_cribl_leader(host, job.parameters)
         
+        elif job.job_type == "custom_command":
+            result = await run_custom_command(host, job.parameters)
+            
+        elif job.job_type == "bash_script":
+            result = await run_bash_script(host, job.parameters)
+        
         # Update job with result
         if result:
             job.return_code = result.get("return_code")
@@ -138,9 +164,7 @@ async def _run_job(job_id: int, db: Session):
 
 @router.post("/install/splunk-uf", response_model=JobResponse)
 async def create_splunk_uf_install_job(
-    host_id: int,
-    parameters: Dict[str, Any],
-    is_dry_run: bool = False,
+    request: SplunkUFInstallRequest,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
@@ -148,18 +172,27 @@ async def create_splunk_uf_install_job(
     Create a job to install Splunk Universal Forwarder
     """
     # Check if host exists
-    host = db.query(Host).filter(Host.id == host_id).first()
+    host = db.query(Host).filter(Host.id == request.host_id).first()
     if host is None:
         raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Validate required parameters
+    required_params = ["version", "install_dir", "run_user"]
+    for param in required_params:
+        if param not in request.parameters:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Missing required parameter: {param}"
+            )
     
     # Create job
     job = Job(
         job_id=f"splunk-uf-{uuid.uuid4()}",
-        host_id=host_id,
+        host_id=request.host_id,
         job_type=JobType.SPLUNK_UF_INSTALL.value,
         status=JobStatus.PENDING.value,
-        is_dry_run=is_dry_run,
-        parameters=parameters
+        is_dry_run=request.is_dry_run,
+        parameters=request.parameters
     )
     
     db.add(job)
@@ -174,9 +207,7 @@ async def create_splunk_uf_install_job(
 
 @router.post("/install/splunk-enterprise", response_model=JobResponse)
 async def create_splunk_enterprise_install_job(
-    host_id: int,
-    parameters: Dict[str, Any],
-    is_dry_run: bool = False,
+    request: SplunkEnterpriseInstallRequest,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
@@ -184,18 +215,27 @@ async def create_splunk_enterprise_install_job(
     Create a job to install Splunk Enterprise
     """
     # Check if host exists
-    host = db.query(Host).filter(Host.id == host_id).first()
+    host = db.query(Host).filter(Host.id == request.host_id).first()
     if host is None:
         raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Validate required parameters
+    required_params = ["version", "install_dir", "run_user"]
+    for param in required_params:
+        if param not in request.parameters:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Missing required parameter: {param}"
+            )
     
     # Create job
     job = Job(
         job_id=f"splunk-ent-{uuid.uuid4()}",
-        host_id=host_id,
+        host_id=request.host_id,
         job_type=JobType.SPLUNK_ENT_INSTALL.value,
         status=JobStatus.PENDING.value,
-        is_dry_run=is_dry_run,
-        parameters=parameters
+        is_dry_run=request.is_dry_run,
+        parameters=request.parameters
     )
     
     db.add(job)
@@ -210,9 +250,7 @@ async def create_splunk_enterprise_install_job(
 
 @router.post("/install/cribl-worker", response_model=JobResponse)
 async def create_cribl_worker_install_job(
-    host_id: int,
-    parameters: Dict[str, Any],
-    is_dry_run: bool = False,
+    request: CriblInstallRequest,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
@@ -220,18 +258,27 @@ async def create_cribl_worker_install_job(
     Create a job to install Cribl Worker
     """
     # Check if host exists
-    host = db.query(Host).filter(Host.id == host_id).first()
+    host = db.query(Host).filter(Host.id == request.host_id).first()
     if host is None:
         raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Validate required parameters
+    required_params = ["version", "install_dir", "run_user"]
+    for param in required_params:
+        if param not in request.parameters:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Missing required parameter: {param}"
+            )
     
     # Create job
     job = Job(
         job_id=f"cribl-worker-{uuid.uuid4()}",
-        host_id=host_id,
+        host_id=request.host_id,
         job_type=JobType.CRIBL_WORKER_INSTALL.value,
         status=JobStatus.PENDING.value,
-        is_dry_run=is_dry_run,
-        parameters=parameters
+        is_dry_run=request.is_dry_run,
+        parameters=request.parameters
     )
     
     db.add(job)
@@ -246,9 +293,7 @@ async def create_cribl_worker_install_job(
 
 @router.post("/install/cribl-leader", response_model=JobResponse)
 async def create_cribl_leader_install_job(
-    host_id: int,
-    parameters: Dict[str, Any],
-    is_dry_run: bool = False,
+    request: CriblInstallRequest,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
@@ -256,18 +301,78 @@ async def create_cribl_leader_install_job(
     Create a job to install Cribl Leader
     """
     # Check if host exists
-    host = db.query(Host).filter(Host.id == host_id).first()
+    host = db.query(Host).filter(Host.id == request.host_id).first()
     if host is None:
         raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Validate required parameters
+    required_params = ["version", "install_dir", "run_user"]
+    for param in required_params:
+        if param not in request.parameters:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Missing required parameter: {param}"
+            )
     
     # Create job
     job = Job(
         job_id=f"cribl-leader-{uuid.uuid4()}",
-        host_id=host_id,
+        host_id=request.host_id,
         job_type=JobType.CRIBL_LEADER_INSTALL.value,
         status=JobStatus.PENDING.value,
-        is_dry_run=is_dry_run,
-        parameters=parameters
+        is_dry_run=request.is_dry_run,
+        parameters=request.parameters
+    )
+    
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    
+    # Run job in background
+    background_tasks.add_task(_run_job, job.id, db)
+    
+    return job
+
+
+@router.post("/custom", response_model=JobResponse)
+async def create_custom_job(
+    request: CustomJobRequest,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a custom job to run commands or scripts
+    """
+    # Check if host exists
+    host = db.query(Host).filter(Host.id == request.host_id).first()
+    if host is None:
+        raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Validate job type
+    valid_job_types = ["custom_command", "bash_script"]
+    if request.job_type not in valid_job_types:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid job type. Must be one of: {', '.join(valid_job_types)}"
+        )
+    
+    # Validate required parameters
+    required_params = ["run_user", "command"] if request.job_type == "custom_command" else ["run_user"]
+    for param in required_params:
+        if param not in request.parameters:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Missing required parameter: {param}"
+            )
+    
+    # Create job
+    job = Job(
+        job_id=f"custom-{uuid.uuid4()}",
+        host_id=request.host_id,
+        job_type=request.job_type,
+        status=JobStatus.PENDING.value,
+        is_dry_run=request.is_dry_run,
+        parameters=request.parameters
     )
     
     db.add(job)
