@@ -16,7 +16,7 @@ DEFAULT_CRIBL_VERSION = "3.4.1"  # Latest version as of script creation
 DEFAULT_INSTALL_DIR = "/opt"
 DEFAULT_CRIBL_USER = "cribl"
 DEFAULT_CRIBL_GROUP = "cribl"
-DEFAULT_CRIBL_ADMIN_PASSWORD = "admin"  # Default Cribl password
+DEFAULT_CRIBL_ADMIN_PASSWORD = "admin123"  # Default Cribl password
 DEFAULT_CRIBL_API_PORT = 9000  # Default Cribl UI/API port
 DEFAULT_CRIBL_WORKER_PORT = 4200  # Default Cribl worker connection port
 

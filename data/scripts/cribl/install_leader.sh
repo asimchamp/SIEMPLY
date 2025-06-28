@@ -18,7 +18,7 @@ set -e
 VERSION="3.4.1"
 INSTALL_DIR="/opt/cribl"
 RUN_USER="cribl"
-ADMIN_PASSWORD="admin"
+ADMIN_PASSWORD="admin123"
 PORT="9000"
 DRY_RUN=false
 

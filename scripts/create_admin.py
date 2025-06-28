@@ -20,7 +20,7 @@ from backend.config.settings import settings
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
-def create_admin_user(username="admin", password="admin", email="admin@siemply.local"):
+def create_admin_user(username="admin", password="admin123", email="admin@siemply.local"):
     """Create an admin user"""
     try:
         # Create engine with absolute path
@@ -71,7 +71,7 @@ def main():
     
     # Get username and password from command line arguments
     username = "admin"
-    password = "admin"
+    password = "admin123"
     email = "admin@siemply.local"
     
     if len(sys.argv) > 1:
