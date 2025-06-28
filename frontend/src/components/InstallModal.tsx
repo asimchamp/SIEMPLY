@@ -355,7 +355,6 @@ const InstallModal: React.FC<InstallModalProps> = ({ visible, onClose, onSuccess
               name="is_dry_run"
               label="Dry Run"
               valuePropName="checked"
-              initialValue={false}
               tooltip="Simulate the installation without actually installing anything"
             >
               <Switch />
@@ -489,7 +488,7 @@ const InstallModal: React.FC<InstallModalProps> = ({ visible, onClose, onSuccess
       onCancel={handleClose}
       width={700}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="install-modal-content">
         <Steps current={currentStep} style={{ marginBottom: 24 }}>
@@ -501,6 +500,7 @@ const InstallModal: React.FC<InstallModalProps> = ({ visible, onClose, onSuccess
         <Form
           form={form}
           layout="vertical"
+          initialValues={{ is_dry_run: false }}
         >
           {renderStepContent()}
         </Form>

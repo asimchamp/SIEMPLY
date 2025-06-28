@@ -38,7 +38,6 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 const { Panel } = Collapse;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -288,10 +287,13 @@ const JobHistory: React.FC = () => {
   const jobOutputContent = () => {
     if (!selectedJob) return null;
     
-    return (
-      <div className="job-output">
-        <Tabs defaultActiveKey="details">
-          <TabPane tab="Details" key="details">
+    // Define tabs items for the Tabs component
+    const tabItems = [
+      {
+        key: "details",
+        label: "Details",
+        children: (
+          <>
             <Descriptions bordered column={1}>
               <Descriptions.Item label="Job ID">{selectedJob.job_id}</Descriptions.Item>
               <Descriptions.Item label="Type">{selectedJob.job_type.replace(/_/g, ' ')}</Descriptions.Item>
@@ -333,9 +335,14 @@ const JobHistory: React.FC = () => {
                 </Panel>
               </Collapse>
             )}
-          </TabPane>
-          
-          <TabPane tab="Output" key="output">
+          </>
+        )
+      },
+      {
+        key: "output",
+        label: "Output",
+        children: (
+          <>
             <Collapse defaultActiveKey={['stdout']} style={{ marginBottom: 16 }}>
               <Panel 
                 header={
@@ -370,8 +377,14 @@ const JobHistory: React.FC = () => {
                 </Panel>
               </Collapse>
             )}
-          </TabPane>
-        </Tabs>
+          </>
+        )
+      }
+    ];
+    
+    return (
+      <div className="job-output">
+        <Tabs defaultActiveKey="details" items={tabItems} />
       </div>
     );
   };

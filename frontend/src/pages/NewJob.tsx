@@ -102,7 +102,7 @@ const MotionDiv: React.FC<{
   whileTap?: string;
   transition?: any;
 }> = ({ children }) => {
-  return <div>{children}</div>;
+  return <div className="motion-card">{children}</div>;
 };
 
 const NewJob: React.FC = () => {
@@ -328,7 +328,6 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="install_dir"
             label="Installation Directory"
-            initialValue={installType.includes('splunk') ? '/opt/splunk' : '/opt'}
           >
             <Input placeholder="/opt" />
           </Form.Item>
@@ -337,7 +336,6 @@ const NewJob: React.FC = () => {
         <Form.Item
           name="run_user"
           label="Run As User"
-          initialValue={installType.includes('splunk') ? 'splunk' : (installType.includes('cribl') ? 'cribl' : 'root')}
           rules={[{ required: true, message: 'Please specify the user to run as' }]}
         >
           <Input placeholder="e.g., splunk" prefix={<UserOutlined />} />
@@ -354,10 +352,9 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="version"
             label="Splunk Version"
-            initialValue="9.4.3"
             rules={[{ required: true, message: 'Please select a version' }]}
           >
-            <Select placeholder="Select Splunk version" defaultValue="9.4.3">
+            <Select placeholder="Select Splunk version">
               {SPLUNK_VERSIONS.map(version => (
                 <Option key={version} value={version}>{version}</Option>
               ))}
@@ -413,7 +410,6 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="version"
             label="Cribl Version"
-            initialValue="3.4.1"
             rules={[{ required: true, message: 'Please select a version' }]}
           >
             <Select placeholder="Select Cribl version">
@@ -453,7 +449,6 @@ const NewJob: React.FC = () => {
             name="command"
             label={installType === 'custom_command' ? "Command" : "Script Content"}
             rules={[{ required: true, message: 'Please enter a command or script' }]}
-            initialValue={installType === 'custom_command' ? 'echo "Hello World"' : '#!/bin/bash\n\necho "Hello World"'}
           >
             <Input.TextArea 
               rows={installType === 'custom_command' ? 2 : 10} 
@@ -505,7 +500,6 @@ const NewJob: React.FC = () => {
               name="is_dry_run"
               label="Dry Run"
               valuePropName="checked"
-              initialValue={false}
               tooltip="Simulate the installation without actually installing anything"
             >
               <Switch />
@@ -724,7 +718,7 @@ const NewJob: React.FC = () => {
         onCancel={handleModalClose}
         width={800}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <div className="install-modal-content">
           <Steps current={currentStep} style={{ marginBottom: 24 }}>
@@ -736,6 +730,7 @@ const NewJob: React.FC = () => {
           <Form
             form={form}
             layout="vertical"
+            initialValues={{ is_dry_run: false }}
           >
             {renderStepContent()}
           </Form>

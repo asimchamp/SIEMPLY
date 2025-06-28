@@ -23,7 +23,6 @@ import {
 import { hostService, Host } from '../services/api';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 interface HostDetailsModalProps {
   visible: boolean;
@@ -290,12 +289,12 @@ const HostDetailsModal: React.FC<HostDetailsModalProps> = ({ visible, host, onCl
       );
     }
     
-    return (
-      <Tabs defaultActiveKey="overview">
-        <TabPane 
-          tab={<span><DesktopOutlined /> Overview</span>} 
-          key="overview"
-        >
+    // Define tabs items array instead of using TabPane children
+    const tabItems = [
+      {
+        key: 'overview',
+        label: <span><DesktopOutlined /> Overview</span>,
+        children: (
           <Row gutter={[16, 16]}>
             <Col span={24}>
               <Card title="OS Information">
@@ -306,35 +305,39 @@ const HostDetailsModal: React.FC<HostDetailsModalProps> = ({ visible, host, onCl
               {renderUptimeInfo()}
             </Col>
           </Row>
-        </TabPane>
-        
-        <TabPane 
-          tab={<span><BarChartOutlined /> CPU</span>} 
-          key="cpu"
-        >
+        )
+      },
+      {
+        key: 'cpu',
+        label: <span><BarChartOutlined /> CPU</span>,
+        children: (
           <Card title="CPU Information">
             {renderCpuInfo()}
           </Card>
-        </TabPane>
-        
-        <TabPane 
-          tab={<span><ApiOutlined /> Memory</span>} 
-          key="memory"
-        >
+        )
+      },
+      {
+        key: 'memory',
+        label: <span><ApiOutlined /> Memory</span>,
+        children: (
           <Card title="Memory Information">
             {renderMemoryInfo()}
           </Card>
-        </TabPane>
-        
-        <TabPane 
-          tab={<span><HddOutlined /> Storage</span>} 
-          key="storage"
-        >
+        )
+      },
+      {
+        key: 'storage',
+        label: <span><HddOutlined /> Storage</span>,
+        children: (
           <Card title="Storage Information">
             {renderDiskInfo()}
           </Card>
-        </TabPane>
-      </Tabs>
+        )
+      }
+    ];
+    
+    return (
+      <Tabs defaultActiveKey="overview" items={tabItems} />
     );
   };
 

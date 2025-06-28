@@ -169,11 +169,14 @@ const ConfigPushModal: React.FC<ConfigPushModalProps> = ({ visible, onClose }) =
       <Form
         form={form}
         layout="vertical"
+        initialValues={{
+          product: "splunk",
+          targetDir: targetDir
+        }}
       >
         <Form.Item
           name="product"
           label="Product"
-          initialValue="splunk"
           rules={[{ required: true, message: 'Please select a product' }]}
         >
           <Select 
@@ -206,7 +209,6 @@ const ConfigPushModal: React.FC<ConfigPushModalProps> = ({ visible, onClose }) =
         <Form.Item
           name="targetDir"
           label="Target Directory"
-          initialValue={targetDir}
           rules={[{ required: true, message: 'Please specify target directory' }]}
         >
           <Input 
