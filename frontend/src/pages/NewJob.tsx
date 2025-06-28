@@ -144,6 +144,7 @@ const NewJob: React.FC = () => {
     setInstallType('');
     setIsModalVisible(true);
     setCurrentStep(0);
+    // Reset form fields properly
     form.resetFields();
   };
 
@@ -152,15 +153,23 @@ const NewJob: React.FC = () => {
     setInstallType(type);
     
     // Reset version field based on type
-    if (type.includes('splunk')) {
+    if (type === 'splunk_uf') {
       form.setFieldsValue({ 
         version: '9.4.3',
-        run_user: 'splunk'
+        run_user: 'splunk',
+        install_dir: '/opt/splunkforwarder'
+      });
+    } else if (type.includes('splunk')) {
+      form.setFieldsValue({ 
+        version: '9.4.3',
+        run_user: 'splunk',
+        install_dir: '/opt/splunk'
       });
     } else if (type.includes('cribl')) {
       form.setFieldsValue({ 
         version: '3.4.1',
-        run_user: 'cribl'
+        run_user: 'cribl',
+        install_dir: '/opt/cribl'
       });
     } else if (type.includes('custom_command') || type.includes('bash_script')) {
       form.setFieldsValue({
@@ -169,7 +178,8 @@ const NewJob: React.FC = () => {
       });
     } else {
       form.setFieldsValue({ 
-        run_user: 'root'
+        run_user: 'root',
+        install_dir: '/opt'
       });
     }
   };
@@ -201,18 +211,32 @@ const NewJob: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (): Promise<void> => {
     try {
+      await form.validateFields();
       setLoading(true);
       setError(null);
       
       const values = form.getFieldsValue();
       const { host_id, version, install_dir, is_dry_run, run_user, command } = values;
       
+      // Validate required fields
+      if (!host_id) {
+        throw new Error("Please select a target host");
+      }
+      
       // Prepare parameters based on installation type
       const parameters: Record<string, any> = {
         version,
-        install_dir: install_dir || '/opt',
         run_user: run_user || 'root'
       };
+      
+      // Set installation directory if provided or use default
+      if (install_dir) {
+        parameters.install_dir = install_dir;
+      } else if (installType.includes('splunk')) {
+        parameters.install_dir = '/opt/splunkforwarder';
+      } else if (installType.includes('cribl')) {
+        parameters.install_dir = '/opt/cribl';
+      }
       
       // Add additional parameters based on installation type
       if (installType === 'splunk_uf') {
@@ -249,9 +273,7 @@ const NewJob: React.FC = () => {
           job = await jobService.submitCustomJob(host_id, installType, parameters, is_dry_run);
           break;
         default:
-          // For other types
-          job = await jobService.installSplunkUF(host_id, parameters, is_dry_run);
-          break;
+          throw new Error(`Unknown installation type: ${installType}`);
       }
       
       // Update state with job ID
@@ -260,7 +282,7 @@ const NewJob: React.FC = () => {
       message.success('Job submitted successfully');
     } catch (error) {
       console.error('Failed to submit job:', error);
-      setError('Failed to submit installation job. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to submit installation job. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -295,7 +317,7 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="install_dir"
             label="Installation Directory"
-            initialValue={installType.includes('splunk') ? '/opt/splunk' : '/opt'}
+            initialValue={installType.includes('splunk_uf') ? '/opt/splunkforwarder' : (installType.includes('splunk') ? '/opt/splunk' : '/opt')}
           >
             <Input placeholder="/opt" />
           </Form.Item>
@@ -700,12 +722,14 @@ const NewJob: React.FC = () => {
             ))}
           </Steps>
           
-          <Form
-            form={form}
-            layout="vertical"
-          >
-            {renderStepContent()}
-          </Form>
+          <Form.Provider>
+            <Form
+              form={form}
+              layout="vertical"
+            >
+              {renderStepContent()}
+            </Form>
+          </Form.Provider>
           
           <div style={{ marginTop: 24, textAlign: 'right' }}>
             {currentStep > 0 && currentStep < 3 && (

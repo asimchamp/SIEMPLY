@@ -1,0 +1,74 @@
+NewJob.tsx:147 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
+warning @ antd.js?v=9eb5261e:1638
+call @ antd.js?v=9eb5261e:1657
+warningOnce @ antd.js?v=9eb5261e:1662
+(anonymous) @ antd.js?v=9eb5261e:19880
+setTimeout
+(anonymous) @ antd.js?v=9eb5261e:19877
+(anonymous) @ antd.js?v=9eb5261e:20129
+handleCategorySelect @ NewJob.tsx:147
+onClick @ NewJob.tsx:659
+callCallback2 @ chunk-V5LT2MCF.js?v=9192ed17:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=9192ed17:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=9192ed17:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=9192ed17:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=9192ed17:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=9192ed17:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=9192ed17:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=9192ed17:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=9192ed17:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=9192ed17:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=9192ed17:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=9192ed17:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=9192ed17:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=9192ed17:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=9192ed17:5449
+api.ts:229 
+            
+            
+           POST http://192.168.100.45:5050/jobs/install/splunk-uf 422 (Unprocessable Entity)
+dispatchXhrRequest @ axios.js?v=7697759d:1662
+xhr @ axios.js?v=7697759d:1542
+dispatchRequest @ axios.js?v=7697759d:2017
+Promise.then
+_request @ axios.js?v=7697759d:2220
+request @ axios.js?v=7697759d:2129
+httpMethod @ axios.js?v=7697759d:2267
+wrap @ axios.js?v=7697759d:8
+installSplunkUF @ api.ts:229
+handleSubmit @ NewJob.tsx:235
+(anonymous) @ antd.js?v=9eb5261e:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=9192ed17:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=9192ed17:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=9192ed17:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=9192ed17:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=9192ed17:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=9192ed17:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=9192ed17:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=9192ed17:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=9192ed17:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=9192ed17:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=9192ed17:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=9192ed17:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=9192ed17:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=9192ed17:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=9192ed17:5449
+NewJob.tsx:262 Failed to submit job: AxiosError {message: 'Request failed with status code 422', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+handleSubmit @ NewJob.tsx:262
+await in handleSubmit
+(anonymous) @ antd.js?v=9eb5261e:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=9192ed17:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=9192ed17:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=9192ed17:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=9192ed17:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=9192ed17:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=9192ed17:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=9192ed17:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=9192ed17:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=9192ed17:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=9192ed17:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=9192ed17:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=9192ed17:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=9192ed17:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=9192ed17:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=9192ed17:5449
