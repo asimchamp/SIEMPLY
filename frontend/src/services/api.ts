@@ -226,12 +226,19 @@ export const jobService = {
 
   // Install Splunk Universal Forwarder
   async installSplunkUF(hostId: number, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
-    const response = await api.post('/jobs/install/splunk-uf', { 
-      host_id: hostId, 
-      parameters, 
-      is_dry_run: isDryRun 
-    });
-    return response.data;
+    console.log("Installing Splunk UF with parameters:", { hostId, parameters, isDryRun });
+    
+    try {
+      const response = await api.post('/jobs/install/splunk-uf', { 
+        host_id: hostId, 
+        parameters, 
+        is_dry_run: isDryRun 
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("Splunk UF installation error details:", error.response?.data);
+      throw error;
+    }
   },
 
   // Install Splunk Enterprise

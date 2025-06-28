@@ -145,6 +145,25 @@ const NewJob: React.FC = () => {
     setIsModalVisible(true);
     setCurrentStep(0);
     form.resetFields();
+    
+    // Initialize default values based on category
+    if (category === InstallCategory.SPLUNK) {
+      form.setFieldsValue({
+        run_user: 'splunk'
+      });
+    } else if (category === InstallCategory.CRIBL) {
+      form.setFieldsValue({
+        run_user: 'cribl'
+      });
+    } else if (category === InstallCategory.USER) {
+      form.setFieldsValue({
+        run_user: 'root'
+      });
+    } else {
+      form.setFieldsValue({
+        run_user: 'root'
+      });
+    }
   };
 
   // Handle installation type change
@@ -155,12 +174,14 @@ const NewJob: React.FC = () => {
     if (type.includes('splunk')) {
       form.setFieldsValue({ 
         version: '9.4.3',
-        run_user: 'splunk'
+        run_user: 'splunk',
+        install_dir: '/opt/splunkforwarder' // Use correct default path for Splunk UF
       });
     } else if (type.includes('cribl')) {
       form.setFieldsValue({ 
         version: '3.4.1',
-        run_user: 'cribl'
+        run_user: 'cribl',
+        install_dir: '/opt/cribl'
       });
     } else if (type.includes('custom_command') || type.includes('bash_script')) {
       form.setFieldsValue({
@@ -169,7 +190,8 @@ const NewJob: React.FC = () => {
       });
     } else {
       form.setFieldsValue({ 
-        run_user: 'root'
+        run_user: 'root',
+        install_dir: '/opt'
       });
     }
   };
@@ -214,13 +236,22 @@ const NewJob: React.FC = () => {
         // Map run_user to user for backend compatibility
         user: run_user || 'root',
         // Add default admin password if not provided
-        admin_password: values.admin_password || 'changeme'
+        admin_password: values.admin_password || 'changeme',
+        // Add group parameter matching the user
+        group: run_user || 'root'
       };
+      
+      // Log the parameters being sent
+      console.log(`Submitting job for ${installType} with parameters:`, parameters);
       
       // Add additional parameters based on installation type
       if (installType === 'splunk_uf') {
-        parameters.deployment_server = values.deployment_server;
-        parameters.deployment_app = values.deployment_app;
+        if (values.deployment_server) {
+          parameters.deployment_server = values.deployment_server;
+        }
+        if (values.deployment_app) {
+          parameters.deployment_app = values.deployment_app;
+        }
       } else if (installType === 'splunk_enterprise') {
         parameters.license_master = values.license_master;
       } else if (installType === 'cribl_worker') {
@@ -326,7 +357,7 @@ const NewJob: React.FC = () => {
             initialValue="9.4.3"
             rules={[{ required: true, message: 'Please select a version' }]}
           >
-            <Select placeholder="Select Splunk version">
+            <Select placeholder="Select Splunk version" defaultValue="9.4.3">
               {SPLUNK_VERSIONS.map(version => (
                 <Option key={version} value={version}>{version}</Option>
               ))}

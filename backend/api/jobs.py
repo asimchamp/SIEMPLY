@@ -4,6 +4,7 @@ Handles job operations including triggering installations
 """
 import uuid
 import asyncio
+import logging
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query
@@ -14,6 +15,9 @@ from backend.models import Host
 from backend.installers.splunk import install_splunk_universal_forwarder, install_splunk_enterprise
 from backend.installers.cribl import install_cribl_worker, install_cribl_leader
 from backend.automation.utils import run_command_with_timeout
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/jobs",
@@ -185,10 +189,25 @@ async def create_splunk_uf_install_job(
     """
     Create a job to install Splunk Universal Forwarder
     """
+    # Log received parameters
+    logger.info(f"Received Splunk UF install request: host_id={host_id}, parameters={parameters}, is_dry_run={is_dry_run}")
+    
     # Check if host exists
     host = db.query(Host).filter(Host.id == host_id).first()
     if host is None:
+        logger.error(f"Host not found: {host_id}")
         raise HTTPException(status_code=404, detail="Host not found")
+    
+    # Validate required parameters
+    required_params = ["version", "user"]
+    missing_params = [param for param in required_params if param not in parameters]
+    
+    if missing_params:
+        logger.error(f"Missing required parameters: {missing_params}. Received: {parameters}")
+        raise HTTPException(
+            status_code=422, 
+            detail=f"Missing required parameters: {', '.join(missing_params)}. Received: {parameters}"
+        )
     
     # Create job
     job = Job(
@@ -207,6 +226,7 @@ async def create_splunk_uf_install_job(
     # Run job in background
     background_tasks.add_task(_run_job, job.id, db)
     
+    logger.info(f"Created Splunk UF install job: {job.job_id}")
     return job
 
 
