@@ -264,6 +264,17 @@ export const jobService = {
     return response.data;
   },
 
+  // Submit custom job (for user commands and scripts)
+  async submitCustomJob(hostId: number, jobType: string, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
+    const response = await api.post('/jobs/custom', { 
+      host_id: hostId,
+      job_type: jobType,
+      parameters, 
+      is_dry_run: isDryRun 
+    });
+    return response.data;
+  },
+
   // Cancel a job
   async cancelJob(id: number): Promise<Job> {
     const response = await api.post(`/jobs/${id}/cancel`);

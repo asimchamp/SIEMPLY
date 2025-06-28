@@ -45,7 +45,8 @@ enum InstallCategory {
   NONE = 'none',
   ROOT = 'root',
   SPLUNK = 'splunk',
-  CRIBL = 'cribl'
+  CRIBL = 'cribl',
+  USER = 'user'
 }
 
 // Define installation type interface
@@ -70,6 +71,10 @@ const INSTALLATION_TYPES: Record<InstallCategory, InstallTypeOption[]> = {
     { value: 'cribl_leader', label: 'Stream Leader' },
     { value: 'cribl_worker', label: 'Stream Worker' },
     { value: 'cribl_edge', label: 'Edge' }
+  ],
+  [InstallCategory.USER]: [
+    { value: 'custom_command', label: 'Custom Command' },
+    { value: 'bash_script', label: 'Bash Script' }
   ]
 };
 
@@ -150,19 +155,21 @@ const NewJob: React.FC = () => {
     if (type.includes('splunk')) {
       form.setFieldsValue({ 
         version: '9.4.3',
-        run_user: 'splunk',
-        script_path: '/data/scripts/splunk/'
+        run_user: 'splunk'
       });
     } else if (type.includes('cribl')) {
       form.setFieldsValue({ 
         version: '3.4.1',
-        run_user: 'cribl',
-        script_path: '/data/scripts/cribl/'
+        run_user: 'cribl'
+      });
+    } else if (type.includes('custom_command') || type.includes('bash_script')) {
+      form.setFieldsValue({
+        run_user: 'root',
+        command: type.includes('custom_command') ? 'echo "Hello World"' : '#!/bin/bash\n\necho "Hello World"'
       });
     } else {
       form.setFieldsValue({ 
-        run_user: 'root',
-        script_path: '/data/scripts/root/'
+        run_user: 'root'
       });
     }
   };
@@ -198,14 +205,13 @@ const NewJob: React.FC = () => {
       setError(null);
       
       const values = form.getFieldsValue();
-      const { host_id, version, install_dir, is_dry_run, run_user, script_path } = values;
+      const { host_id, version, install_dir, is_dry_run, run_user, command } = values;
       
       // Prepare parameters based on installation type
       const parameters: Record<string, any> = {
         version,
         install_dir: install_dir || '/opt',
-        run_user: run_user || 'root',
-        script_path: script_path || `/data/scripts/${selectedCategory}/`
+        run_user: run_user || 'root'
       };
       
       // Add additional parameters based on installation type
@@ -218,6 +224,8 @@ const NewJob: React.FC = () => {
       } else if (installType === 'cribl_worker') {
         parameters.leader_url = values.leader_url;
         parameters.auth_token = values.auth_token;
+      } else if (installType === 'custom_command' || installType === 'bash_script') {
+        parameters.command = command;
       }
       
       // Submit job based on installation type
@@ -235,8 +243,13 @@ const NewJob: React.FC = () => {
         case 'cribl_worker':
           job = await jobService.installCriblWorker(host_id, parameters, is_dry_run);
           break;
+        case 'custom_command':
+        case 'bash_script':
+          // Use a generic job submission for user commands
+          job = await jobService.submitCustomJob(host_id, installType, parameters, is_dry_run);
+          break;
         default:
-          // For custom scripts or other types
+          // For other types
           job = await jobService.installSplunkUF(host_id, parameters, is_dry_run);
           break;
       }
@@ -278,13 +291,15 @@ const NewJob: React.FC = () => {
           </Select>
         </Form.Item>
         
-        <Form.Item
-          name="install_dir"
-          label="Installation Directory"
-          initialValue={installType.includes('splunk') ? '/opt/splunk' : '/opt'}
-        >
-          <Input placeholder="/opt" />
-        </Form.Item>
+        {!installType.includes('custom_command') && !installType.includes('bash_script') && (
+          <Form.Item
+            name="install_dir"
+            label="Installation Directory"
+            initialValue={installType.includes('splunk') ? '/opt/splunk' : '/opt'}
+          >
+            <Input placeholder="/opt" />
+          </Form.Item>
+        )}
 
         <Form.Item
           name="run_user"
@@ -293,14 +308,6 @@ const NewJob: React.FC = () => {
           rules={[{ required: true, message: 'Please specify the user to run as' }]}
         >
           <Input placeholder="e.g., splunk" prefix={<UserOutlined />} />
-        </Form.Item>
-
-        <Form.Item
-          name="script_path"
-          label="Script Path"
-          initialValue={`/data/scripts/${selectedCategory}/`}
-        >
-          <Input placeholder="/data/scripts/splunk/" prefix={<FolderOutlined />} />
         </Form.Item>
       </>
     );
@@ -404,6 +411,24 @@ const NewJob: React.FC = () => {
           )}
         </>
       );
+    } else if (installType === 'custom_command' || installType === 'bash_script') {
+      return (
+        <>
+          {commonFields}
+          
+          <Form.Item
+            name="command"
+            label={installType === 'custom_command' ? "Command" : "Script Content"}
+            rules={[{ required: true, message: 'Please enter a command or script' }]}
+            initialValue={installType === 'custom_command' ? 'echo "Hello World"' : '#!/bin/bash\n\necho "Hello World"'}
+          >
+            <Input.TextArea 
+              rows={installType === 'custom_command' ? 2 : 10} 
+              placeholder={installType === 'custom_command' ? 'Enter command to execute' : 'Enter bash script content'} 
+            />
+          </Form.Item>
+        </>
+      );
     } else {
       // Custom script or other installation types
       return commonFields;
@@ -498,20 +523,26 @@ const NewJob: React.FC = () => {
               </p>
             </div>
             
-            <div>
-              <Text strong>Version:</Text>
-              <p>{form.getFieldValue('version') || 'N/A'}</p>
-            </div>
+            {(installType !== 'custom_command' && installType !== 'bash_script') && (
+              <div>
+                <Text strong>Version:</Text>
+                <p>{form.getFieldValue('version') || 'N/A'}</p>
+              </div>
+            )}
 
             <div>
               <Text strong>Run As User:</Text>
               <p>{form.getFieldValue('run_user') || 'root'}</p>
             </div>
 
-            <div>
-              <Text strong>Script Path:</Text>
-              <p>{form.getFieldValue('script_path') || `/data/scripts/${selectedCategory}/`}</p>
-            </div>
+            {(installType === 'custom_command' || installType === 'bash_script') && (
+              <div>
+                <Text strong>{installType === 'custom_command' ? 'Command' : 'Script'}:</Text>
+                <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px', maxHeight: '200px', overflow: 'auto' }}>
+                  {form.getFieldValue('command')}
+                </pre>
+              </div>
+            )}
           </div>
         );
       
@@ -594,6 +625,8 @@ const NewJob: React.FC = () => {
         return <FireOutlined style={{ fontSize: '3rem' }} />;
       case InstallCategory.CRIBL:
         return <ThunderboltOutlined style={{ fontSize: '3rem' }} />;
+      case InstallCategory.USER:
+        return <UserOutlined style={{ fontSize: '3rem' }} />;
       default:
         return <CloudDownloadOutlined style={{ fontSize: '3rem' }} />;
     }
