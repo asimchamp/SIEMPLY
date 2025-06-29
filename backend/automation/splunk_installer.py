@@ -21,6 +21,19 @@ SPLUNK_UF_URLS = {
     "8.1.5": "https://download.splunk.com/products/universalforwarder/releases/8.1.5/linux/splunkforwarder-8.1.5-9c0c082e4596-Linux-x86_64.tgz",
 }
 
+# Function to dynamically generate download URL for any version
+def get_splunk_download_url(version: str) -> str:
+    """
+    Generate a download URL for a given Splunk UF version.
+    Falls back to the predefined URLs if available.
+    """
+    if version in SPLUNK_UF_URLS:
+        return SPLUNK_UF_URLS[version]
+    
+    # For versions not in the predefined list, generate a URL based on the pattern
+    # Note: This is a best guess and may not work for all versions
+    return f"https://download.splunk.com/products/universalforwarder/releases/{version}/linux/splunkforwarder-{version}-Linux-x86_64.tgz"
+
 async def install_splunk_uf(host: Host, params: Dict[str, Any]) -> Dict[str, Any]:
     """
     Install Splunk Universal Forwarder on a host via SSH
@@ -63,6 +76,10 @@ async def install_splunk_uf(host: Host, params: Dict[str, Any]) -> Dict[str, Any
             "message": "Admin password is required"
         }
     
+    # Get download URL for the specified version
+    download_url = get_splunk_download_url(version)
+    logger.info(f"Using download URL for Splunk UF {version}: {download_url}")
+    
     # Connect to the host via SSH
     async with get_ssh_client(host) as ssh:
         # Check if host is online
@@ -103,96 +120,98 @@ async def install_splunk_uf(host: Host, params: Dict[str, Any]) -> Dict[str, Any
                     "message": f"Splunk UF is already installed at {install_dir}/splunkforwarder"
                 }
             
-            # Instead of downloading from external URL, check if we have a pre-installed package
-            # First check common locations for the package
-            package_locations = [
-                "/tmp/splunkforwarder.tgz",
-                "/var/cache/splunk/splunkforwarder.tgz",
-                f"/home/{host.username}/splunkforwarder.tgz",
-                "/opt/packages/splunkforwarder.tgz"
-            ]
+            # Create a temp directory for downloads
+            await ssh.run("sudo mkdir -p /tmp/splunk_install")
             
-            package_found = False
-            for location in package_locations:
-                check_package = await ssh.run(f"test -f {location} && echo 'found' || echo 'not found'")
-                if check_package.stdout.strip() == "found":
-                    logger.info(f"Found existing Splunk UF package at {location}")
-                    package_found = True
-                    extract_cmd = f"cd {install_dir} && sudo tar -xzf {location}"
-                    break
+            # Download Splunk UF directly from the internet
+            logger.info(f"Downloading Splunk UF {version} on {host.hostname} from {download_url}")
             
-            # If no package found, try to install from a central repository server
-            if not package_found:
-                logger.info(f"No pre-installed package found, trying to copy from repository server")
+            # Check if curl is available
+            curl_check = await ssh.run("which curl")
+            has_curl = curl_check.returncode == 0
+            
+            # Check if wget is available
+            wget_check = await ssh.run("which wget")
+            has_wget = wget_check.returncode == 0
+            
+            if not has_curl and not has_wget:
+                return {
+                    "success": False,
+                    "message": "Neither curl nor wget is available on the target host. Please install one of these tools."
+                }
+            
+            download_success = False
+            download_error = ""
+            
+            # Try curl first if available
+            if has_curl:
+                logger.info(f"Attempting download with curl on {host.hostname}")
+                download_cmd = f"cd /tmp/splunk_install && sudo curl -L -o splunkforwarder.tgz {download_url}"
+                download_result = await ssh.run(download_cmd)
                 
-                # Try to copy from a central repository server (adjust IP/path as needed)
-                repo_server = "192.168.100.45"  # Assuming this is your central server
-                repo_path = f"/opt/packages/splunkforwarder-{version}.tgz"
-                
-                # Create temp directory
-                await ssh.run("sudo mkdir -p /tmp/splunk_install")
-                
-                # Try to copy from repository server
-                copy_cmd = f"scp -o StrictHostKeyChecking=no {repo_server}:{repo_path} /tmp/splunkforwarder.tgz"
-                copy_result = await ssh.run(copy_cmd)
-                
-                if copy_result.returncode != 0:
-                    # If copy fails, create a minimal installation
-                    logger.warning(f"Failed to copy package from repository server, creating minimal installation")
-                    
-                    # Create minimal directory structure
-                    await ssh.run(f"sudo mkdir -p {install_dir}/splunkforwarder/bin")
-                    await ssh.run(f"sudo mkdir -p {install_dir}/splunkforwarder/etc/system/local")
-                    
-                    # Create a dummy splunk binary
-                    dummy_script = f"""#!/bin/bash
-echo "Splunk Universal Forwarder (dummy installation)"
-echo "Version: {version}"
-if [[ $1 == "status" ]]; then
-    echo "Splunk is running"
-fi
-"""
-                    await ssh.run(f'echo "{dummy_script}" | sudo tee {install_dir}/splunkforwarder/bin/splunk > /dev/null')
-                    await ssh.run(f"sudo chmod +x {install_dir}/splunkforwarder/bin/splunk")
-                    
-                    # Set ownership
-                    chown_cmd = f"sudo chown -R {user}:{group} {install_dir}/splunkforwarder"
-                    await ssh.run(chown_cmd)
-                    
-                    # Create user-seed.conf
-                    seed_cmd = f"""sudo mkdir -p {install_dir}/splunkforwarder/etc/system/local && 
-                                echo '[user_info]' | sudo tee {install_dir}/splunkforwarder/etc/system/local/user-seed.conf > /dev/null && 
-                                echo 'USERNAME = admin' | sudo tee -a {install_dir}/splunkforwarder/etc/system/local/user-seed.conf > /dev/null && 
-                                echo 'PASSWORD = {admin_password}' | sudo tee -a {install_dir}/splunkforwarder/etc/system/local/user-seed.conf > /dev/null"""
-                    await ssh.run(seed_cmd)
-                    
-                    # Configure deployment client if specified
-                    if deployment_server:
-                        deploy_cmd = f"""sudo mkdir -p {install_dir}/splunkforwarder/etc/system/local && 
-                                    echo '[deployment-client]' | sudo tee {install_dir}/splunkforwarder/etc/system/local/deploymentclient.conf > /dev/null && 
-                                    echo 'phoneHome = true' | sudo tee -a {install_dir}/splunkforwarder/etc/system/local/deploymentclient.conf > /dev/null && 
-                                    echo '' | sudo tee -a {install_dir}/splunkforwarder/etc/system/local/deploymentclient.conf > /dev/null && 
-                                    echo '[target-broker:deploymentServer]' | sudo tee -a {install_dir}/splunkforwarder/etc/system/local/deploymentclient.conf > /dev/null && 
-                                    echo 'targetUri = {deployment_server}' | sudo tee -a {install_dir}/splunkforwarder/etc/system/local/deploymentclient.conf > /dev/null"""
-                        await ssh.run(deploy_cmd)
-                    
-                    return {
-                        "success": True,
-                        "message": f"Created minimal Splunk UF installation at {install_dir}/splunkforwarder",
-                        "version": version,
-                        "install_dir": f"{install_dir}/splunkforwarder",
-                        "user": user,
-                        "deployment_server": deployment_server if deployment_server else None,
-                        "is_minimal": True
-                    }
+                if download_result.returncode == 0:
+                    download_success = True
                 else:
-                    # If copy succeeds, extract the package
-                    extract_cmd = f"cd {install_dir} && sudo tar -xzf /tmp/splunkforwarder.tgz"
-            else:
-                logger.info(f"Using pre-installed package for Splunk UF installation")
+                    download_error = f"Curl error: {download_result.stderr}"
+                    logger.warning(f"Curl download failed on {host.hostname}: {download_error}")
+            
+            # Try wget if curl failed or isn't available
+            if not download_success and has_wget:
+                logger.info(f"Attempting download with wget on {host.hostname}")
+                download_cmd = f"cd /tmp/splunk_install && sudo wget -O splunkforwarder.tgz {download_url}"
+                download_result = await ssh.run(download_cmd)
+                
+                if download_result.returncode == 0:
+                    download_success = True
+                else:
+                    if download_error:
+                        download_error += f"\nWget error: {download_result.stderr}"
+                    else:
+                        download_error = f"Wget error: {download_result.stderr}"
+                    logger.warning(f"Wget download failed on {host.hostname}: {download_result.stderr}")
+            
+            if not download_success:
+                # Check for common issues
+                connectivity_check = await ssh.run(f"ping -c 1 download.splunk.com")
+                if connectivity_check.returncode != 0:
+                    return {
+                        "success": False,
+                        "message": f"Cannot reach download.splunk.com. Please check network connectivity.\nError details: {download_error}"
+                    }
+                
+                return {
+                    "success": False,
+                    "message": f"Failed to download Splunk UF. Error details: {download_error}"
+                }
+            
+            # Verify the download was successful
+            verify_cmd = "ls -la /tmp/splunk_install/splunkforwarder.tgz"
+            verify_result = await ssh.run(verify_cmd)
+            
+            if verify_result.returncode != 0 or "No such file" in verify_result.stderr:
+                return {
+                    "success": False,
+                    "message": "Failed to verify Splunk UF download. The file does not exist after download."
+                }
+                
+            # Check file size to ensure it's not empty
+            size_check = await ssh.run("du -h /tmp/splunk_install/splunkforwarder.tgz")
+            if size_check.returncode == 0:
+                file_size = size_check.stdout.strip().split()[0]
+                logger.info(f"Downloaded Splunk UF package size: {file_size}")
+                
+                # If file is suspiciously small, it might be an error page
+                if "k" in file_size or file_size.startswith("0"):
+                    content_check = await ssh.run("head -n 20 /tmp/splunk_install/splunkforwarder.tgz")
+                    if "html" in content_check.stdout.lower() or "error" in content_check.stdout.lower():
+                        return {
+                            "success": False,
+                            "message": "Downloaded file appears to be an HTML error page, not a Splunk package."
+                        }
             
             # Extract Splunk UF
             logger.info(f"Extracting Splunk UF on {host.hostname}")
+            extract_cmd = f"cd {install_dir} && sudo tar -xzf /tmp/splunk_install/splunkforwarder.tgz"
             extract_result = await ssh.run(extract_cmd)
             
             if extract_result.returncode != 0:
@@ -256,7 +275,7 @@ fi
             boot_result = await ssh.run(boot_cmd)
             
             # Clean up
-            cleanup_cmd = "sudo rm -f /tmp/splunkforwarder.tgz"
+            cleanup_cmd = "sudo rm -rf /tmp/splunk_install"
             await ssh.run(cleanup_cmd)
             
             # Return success
