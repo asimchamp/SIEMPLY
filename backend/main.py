@@ -27,6 +27,7 @@ from backend.api.auth import router as auth_router
 from backend.api.configs import router as configs_router
 from backend.api.scheduler import router as scheduler_router
 from backend.api.monitoring import router as monitoring_router
+from backend.api.splunk import router as splunk_router
 
 # Configure logging
 logging.basicConfig(
@@ -84,6 +85,7 @@ app.include_router(auth_router)
 app.include_router(configs_router)
 app.include_router(scheduler_router)
 app.include_router(monitoring_router)
+app.include_router(splunk_router)
 
 # Root API route
 @app.get("/")
@@ -99,7 +101,8 @@ async def root():
             "auth": "/auth",
             "configs": "/configs",
             "scheduler": "/scheduler",
-            "monitoring": "/monitoring"
+            "monitoring": "/monitoring",
+            "splunk": "/splunk"
         }
     }
 

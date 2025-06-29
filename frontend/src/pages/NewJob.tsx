@@ -37,7 +37,7 @@ import { useNavigate } from 'react-router-dom';
 // We'll handle the framer-motion import with a dynamic import to avoid build errors
 // if the package isn't installed yet
 // import { motion } from 'framer-motion';
-import { hostService, jobService, Host } from '../services/api';
+import { hostService, jobService, splunkService, Host } from '../services/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -120,6 +120,7 @@ const NewJob: React.FC = () => {
   const [hostsLoading, setHostsLoading] = useState<boolean>(true);
   const [jobId, setJobId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [directInstallResult, setDirectInstallResult] = useState<Record<string, any> | null>(null);
   const navigate = useNavigate();
 
   // Fetch hosts when component mounts
@@ -272,34 +273,68 @@ const NewJob: React.FC = () => {
       
       // Submit job based on installation type
       let job;
+      let result;
+      let isDirectInstall = false;
+      
       switch (installType) {
         case 'splunk_uf':
-          job = await jobService.installSplunkUF(host_id, parameters, is_dry_run);
+          // Use direct installation for Splunk UF
+          isDirectInstall = true;
+          result = await splunkService.installSplunkUF(host_id, {
+            version,
+            install_dir: install_dir || '/opt',
+            admin_password,
+            user: run_user || 'splunk',
+            group: run_user || 'splunk',
+            deployment_server: values.deployment_server,
+            deployment_app: values.deployment_app,
+            is_dry_run
+          });
+          
+          // Set job ID for consistency in UI
+          setJobId(`direct-splunk-uf-${Date.now()}`);
           break;
+          
         case 'splunk_enterprise':
           job = await jobService.installSplunkEnterprise(host_id, parameters, is_dry_run);
+          setJobId(job.job_id);
           break;
+          
         case 'cribl_leader':
           job = await jobService.installCriblLeader(host_id, parameters, is_dry_run);
+          setJobId(job.job_id);
           break;
+          
         case 'cribl_worker':
           job = await jobService.installCriblWorker(host_id, parameters, is_dry_run);
+          setJobId(job.job_id);
           break;
+          
         case 'custom_command':
         case 'bash_script':
           // Use a generic job submission for user commands
           job = await jobService.submitCustomJob(host_id, installType, parameters, is_dry_run);
+          setJobId(job.job_id);
           break;
+          
         default:
           // For other types
           job = await jobService.installSplunkUF(host_id, parameters, is_dry_run);
+          setJobId(job.job_id);
           break;
       }
       
-      // Update state with job ID
-      setJobId(job.job_id);
+      // Store the result for direct installations
+      if (isDirectInstall && result) {
+        // Store the result in state for display
+        setDirectInstallResult(result);
+      }
+      
+      // Move to next step
       setCurrentStep(currentStep + 1);
-      message.success('Job submitted successfully');
+      message.success(isDirectInstall 
+        ? 'Installation completed directly via SSH' 
+        : 'Job submitted successfully');
     } catch (error: any) {
       console.error('Failed to submit job:', error);
       
@@ -629,20 +664,60 @@ const NewJob: React.FC = () => {
           );
         }
         
+        // Check if this was a direct installation
+        const isDirectInstall = directInstallResult !== null;
+        
         return (
           <Result
             status="success"
-            title="Installation Job Started"
-            subTitle={`Job ID: ${jobId}`}
+            title={isDirectInstall ? "Installation Completed" : "Installation Job Started"}
+            subTitle={isDirectInstall 
+              ? `Installed on ${selectedHost?.hostname} (${selectedHost?.ip_address})` 
+              : `Job ID: ${jobId}`}
             extra={[
-              <Button key="view" type="primary" onClick={() => navigate('/jobs')}>
-                View in Job History
+              <Button key="view" type="primary" onClick={() => navigate(isDirectInstall ? '/hosts' : '/jobs')}>
+                {isDirectInstall ? 'View Hosts' : 'View in Job History'}
               </Button>,
               <Button key="new" onClick={handleModalClose}>
                 New Installation
               </Button>,
             ]}
-          />
+          >
+            {isDirectInstall && directInstallResult && (
+              <div style={{ textAlign: 'left', marginTop: 20 }}>
+                <Divider />
+                <Title level={5}>Installation Details</Title>
+                {directInstallResult.success ? (
+                  <>
+                    <div>
+                      <Text strong>Status:</Text> <Tag color="green">Success</Tag>
+                    </div>
+                    <div>
+                      <Text strong>Message:</Text> {directInstallResult.message}
+                    </div>
+                    {directInstallResult.is_dry_run && (
+                      <Alert
+                        message="Dry Run Mode"
+                        description="This was a simulation. No actual changes were made."
+                        type="warning"
+                        showIcon
+                        style={{ marginTop: 16 }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Text strong>Status:</Text> <Tag color="red">Failed</Tag>
+                    </div>
+                    <div>
+                      <Text strong>Error:</Text> {directInstallResult.message}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </Result>
         );
       
       default:

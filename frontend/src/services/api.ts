@@ -289,6 +289,31 @@ export const jobService = {
   }
 };
 
+// Splunk service
+export const splunkService = {
+  // Install Splunk Universal Forwarder directly (no job)
+  async installSplunkUF(hostId: number, parameters: {
+    version: string;
+    install_dir?: string;
+    admin_password: string;
+    user?: string;
+    group?: string;
+    deployment_server?: string;
+    deployment_app?: string;
+    is_dry_run?: boolean;
+  }): Promise<Record<string, any>> {
+    console.log("Direct Splunk UF installation with parameters:", { hostId, parameters });
+    
+    try {
+      const response = await api.post(`/splunk/${hostId}/install-uf`, parameters);
+      return response.data;
+    } catch (error: any) {
+      console.error("Direct Splunk UF installation error details:", error.response?.data);
+      throw error;
+    }
+  }
+};
+
 // Settings service
 export interface AppSettings {
   apiUrl: string;
