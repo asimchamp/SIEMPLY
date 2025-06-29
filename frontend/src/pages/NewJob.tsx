@@ -17,7 +17,9 @@ import {
   Result, 
   Spin,
   Tooltip,
-  message
+  message,
+  Empty,
+  Tag
 } from 'antd';
 import { 
   CloudDownloadOutlined, 
@@ -28,7 +30,9 @@ import {
   CheckCircleOutlined,
   UserOutlined,
   FolderOutlined,
-  ArrowRightOutlined
+  ArrowRightOutlined,
+  DesktopOutlined,
+  RightOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 // We'll handle the framer-motion import with a dynamic import to avoid build errors
@@ -113,6 +117,7 @@ const NewJob: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
   const [hosts, setHosts] = useState<Host[]>([]);
+  const [selectedHost, setSelectedHost] = useState<Host | null>(null);
   const [hostsLoading, setHostsLoading] = useState<boolean>(true);
   const [jobId, setJobId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -138,22 +143,41 @@ const NewJob: React.FC = () => {
     }
   };
 
+  // Handle host selection
+  const handleHostSelect = (host: Host): void => {
+    setSelectedHost(host);
+    setIsModalVisible(true);
+    
+    // Initialize form with host ID
+    form.resetFields();
+    form.setFieldsValue({
+      host_id: host.id
+    });
+  };
+
   // Handle category selection
   const handleCategorySelect = (category: InstallCategory): void => {
     setSelectedCategory(category);
     setInstallType('');
-    setIsModalVisible(true);
     setCurrentStep(0);
+    
+    // Reset form with appropriate initial values based on category
     form.resetFields();
+    form.setFieldsValue({
+      host_id: selectedHost?.id
+    });
     
     // Initialize default values based on category
     if (category === InstallCategory.SPLUNK) {
       form.setFieldsValue({
-        run_user: 'splunk'
+        run_user: 'splunk',
+        version: '9.4.3',
+        admin_password: 'changeme'
       });
     } else if (category === InstallCategory.CRIBL) {
       form.setFieldsValue({
-        run_user: 'cribl'
+        run_user: 'cribl',
+        version: '3.4.1'
       });
     } else if (category === InstallCategory.USER) {
       form.setFieldsValue({
@@ -220,23 +244,30 @@ const NewJob: React.FC = () => {
     setCurrentStep(currentStep - 1);
   };
 
+  // Handle back to host selection
+  const handleBackToHosts = (): void => {
+    setSelectedHost(null);
+    setSelectedCategory(InstallCategory.NONE);
+    setInstallType('');
+  };
+
   // Handle form submission
   const handleSubmit = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
       
-      const values = form.getFieldsValue();
-      const { host_id, version, install_dir, is_dry_run, run_user, command } = values;
+      const values = await form.validateFields();
+      const { host_id, version, install_dir, is_dry_run, run_user, command, admin_password } = values;
       
       // Prepare parameters based on installation type
       const parameters: Record<string, any> = {
-        version,
+        version: version || (installType.includes('splunk') ? '9.4.3' : '3.4.1'),
         install_dir: install_dir || '/opt',
         // Map run_user to user for backend compatibility
         user: run_user || 'root',
         // Add default admin password if not provided
-        admin_password: values.admin_password || 'changeme',
+        admin_password: admin_password || 'changeme',
         // Add group parameter matching the user
         group: run_user || 'root'
       };
@@ -291,9 +322,12 @@ const NewJob: React.FC = () => {
       setJobId(job.job_id);
       setCurrentStep(currentStep + 1);
       message.success('Job submitted successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit job:', error);
-      setError('Failed to submit installation job. Please try again.');
+      
+      // Extract error details from response if available
+      const errorDetail = error.response?.data?.detail || 'Failed to submit installation job. Please try again.';
+      setError(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
     } finally {
       setLoading(false);
     }
@@ -309,12 +343,14 @@ const NewJob: React.FC = () => {
           name="host_id"
           label="Target Host"
           rules={[{ required: true, message: 'Please select a host' }]}
+          hidden={true} // Hide this since we already selected the host
         >
           <Select 
             placeholder="Select host for installation" 
             loading={hostsLoading}
             showSearch
             optionFilterProp="children"
+            disabled={true}
           >
             {hosts.map(host => (
               <Option key={host.id} value={host.id}>
@@ -377,6 +413,14 @@ const NewJob: React.FC = () => {
                 tooltip="Optional: Deployment app name for UF configuration"
               >
                 <Input placeholder="deployment-apps/uf-config" />
+              </Form.Item>
+              
+              <Form.Item
+                name="admin_password"
+                label="Admin Password"
+                rules={[{ required: true, message: 'Please enter admin password' }]}
+              >
+                <Input.Password placeholder="Admin password" />
               </Form.Item>
             </>
           )}
@@ -532,6 +576,11 @@ const NewJob: React.FC = () => {
             <Divider />
             
             <div>
+              <Text strong>Target Host:</Text>
+              <p>{selectedHost?.hostname} ({selectedHost?.ip_address})</p>
+            </div>
+            
+            <div>
               <Text strong>Installation Category:</Text>
               <p>{selectedCategory.toUpperCase()}</p>
             </div>
@@ -540,13 +589,6 @@ const NewJob: React.FC = () => {
               <Text strong>Installation Type:</Text>
               <p>
                 {INSTALLATION_TYPES[selectedCategory]?.find(type => type.value === installType)?.label || installType}
-              </p>
-            </div>
-            
-            <div>
-              <Text strong>Target Host:</Text>
-              <p>
-                {hosts.find(host => host.id === form.getFieldValue('host_id'))?.hostname}
               </p>
             </div>
             
@@ -659,53 +701,138 @@ const NewJob: React.FC = () => {
     }
   };
 
+  // Render host selection view
+  const renderHostSelection = () => {
+    if (hostsLoading) {
+      return (
+        <div style={{ textAlign: 'center', padding: 50 }}>
+          <Spin size="large" />
+          <p>Loading hosts...</p>
+        </div>
+      );
+    }
+
+    if (hosts.length === 0) {
+      return (
+        <Empty
+          description="No active hosts found. Please add hosts first."
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <Button type="primary" onClick={() => navigate('/hosts')}>
+            Go to Host Management
+          </Button>
+        </Empty>
+      );
+    }
+
+    return (
+      <div>
+        <Title level={4}>Select a Host</Title>
+        <Row gutter={[16, 16]}>
+          {hosts.map(host => (
+            <Col xs={24} sm={12} md={8} key={host.id}>
+              <Card 
+                hoverable
+                onClick={() => handleHostSelect(host)}
+              >
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <DesktopOutlined style={{ fontSize: '24px', marginRight: '16px' }} />
+                  <div>
+                    <div><strong>{host.hostname}</strong></div>
+                    <div>{host.ip_address}</div>
+                    <div>
+                      {host.roles.map(role => (
+                        <Tag key={role}>{role}</Tag>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </div>
+    );
+  };
+
+  // Render category selection
+  const renderCategorySelection = () => {
+    return (
+      <div>
+        <div style={{ marginBottom: 16 }}>
+          <Button 
+            type="link" 
+            icon={<ArrowRightOutlined style={{ transform: 'rotate(180deg)' }} />}
+            onClick={handleBackToHosts}
+          >
+            Back to Host Selection
+          </Button>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <Title level={4}>
+            Selected Host: {selectedHost?.hostname} ({selectedHost?.ip_address})
+          </Title>
+          <Text>Select an installation category to begin</Text>
+        </div>
+        <Row gutter={[24, 24]}>
+          {Object.values(InstallCategory).filter(cat => cat !== InstallCategory.NONE).map((category) => (
+            <Col xs={24} sm={8} key={category}>
+              <MotionDiv
+                variants={cardVariants}
+                initial="initial"
+                animate="animate"
+                whileHover="hover"
+                whileTap="tap"
+                transition={{ duration: 0.3 }}
+              >
+                <Card
+                  hoverable
+                  style={{ textAlign: 'center', height: '100%' }}
+                  onClick={() => handleCategorySelect(category as InstallCategory)}
+                >
+                  <div style={{ padding: '20px 0' }}>
+                    {getCategoryIcon(category as InstallCategory)}
+                    <Title level={3} style={{ marginTop: 16 }}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </Title>
+                    <Text type="secondary">
+                      {category === InstallCategory.ROOT && "System-level installations"}
+                      {category === InstallCategory.SPLUNK && "Splunk components"}
+                      {category === InstallCategory.CRIBL && "Cribl Stream components"}
+                      {category === InstallCategory.USER && "User commands and scripts"}
+                    </Text>
+                  </div>
+                  <div style={{ marginTop: 16 }}>
+                    <Button type="primary" ghost>
+                      Select <RightOutlined />
+                    </Button>
+                  </div>
+                </Card>
+              </MotionDiv>
+            </Col>
+          ))}
+        </Row>
+      </div>
+    );
+  };
+
   return (
     <div className="new-job-container">
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>
           <CloudDownloadOutlined /> New Installation
         </Title>
-        <Text>Select an installation category to begin</Text>
+        <Text>Install software or run commands on hosts</Text>
       </div>
 
-      {/* Installation Categories */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        {Object.values(InstallCategory).filter(cat => cat !== InstallCategory.NONE).map((category) => (
-          <Col xs={24} sm={8} key={category}>
-            <MotionDiv
-              variants={cardVariants}
-              initial="initial"
-              animate="animate"
-              whileHover="hover"
-              whileTap="tap"
-              transition={{ duration: 0.3 }}
-            >
-              <Card
-                hoverable
-                style={{ textAlign: 'center', height: '100%' }}
-                onClick={() => handleCategorySelect(category as InstallCategory)}
-              >
-                <div style={{ padding: '20px 0' }}>
-                  {getCategoryIcon(category as InstallCategory)}
-                  <Title level={3} style={{ marginTop: 16 }}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </Title>
-                  <Text type="secondary">
-                    {category === InstallCategory.ROOT && "System-level installations"}
-                    {category === InstallCategory.SPLUNK && "Splunk components"}
-                    {category === InstallCategory.CRIBL && "Cribl Stream components"}
-                  </Text>
-                </div>
-                <div style={{ marginTop: 16 }}>
-                  <Button type="primary" ghost>
-                    Select <ArrowRightOutlined />
-                  </Button>
-                </div>
-              </Card>
-            </MotionDiv>
-          </Col>
-        ))}
-      </Row>
+      {/* Main content */}
+      {!selectedHost ? (
+        renderHostSelection()
+      ) : (
+        selectedCategory === InstallCategory.NONE ? (
+          renderCategorySelection()
+        ) : null
+      )}
 
       {/* Installation Modal */}
       <Modal
@@ -714,7 +841,7 @@ const NewJob: React.FC = () => {
             {getCategoryIcon(selectedCategory)} {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Installation
           </Title>
         }
-        open={isModalVisible}
+        open={isModalVisible && selectedCategory !== InstallCategory.NONE}
         onCancel={handleModalClose}
         width={800}
         footer={null}
