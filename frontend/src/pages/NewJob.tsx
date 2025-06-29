@@ -150,9 +150,14 @@ const NewJob: React.FC = () => {
     
     // Reset the form and initialize with host ID
     form.resetFields();
-    form.setFieldsValue({
-      host_id: host.id
-    });
+    
+    // Explicitly set the host_id field with the host's ID
+    setTimeout(() => {
+      form.setFieldsValue({
+        host_id: host.id
+      });
+      console.log("Form initialized with host_id:", form.getFieldValue('host_id'));
+    }, 0);
   };
 
   // Handle category selection
@@ -190,37 +195,35 @@ const NewJob: React.FC = () => {
   const handleInstallTypeChange = (type: string): void => {
     setInstallType(type);
     
-    // Reset form fields based on type with explicit default values
+    // Create a complete form values object with all required fields
+    const formValues: Record<string, any> = {
+      host_id: selectedHost?.id, // Ensure host_id is always set
+      install_type: type
+    };
+    
+    // Add type-specific default values
     if (type.includes('splunk')) {
-      const defaultVersion = '9.4.3';
-      
-      // Set default values for Splunk installations
-      setTimeout(() => {
-        form.setFieldsValue({ 
-          version: defaultVersion,
-          run_user: 'splunk',
-          install_dir: type === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
-          admin_password: 'changeme'
-        });
-        console.log("Form values after setting defaults:", form.getFieldsValue());
-      }, 0);
+      formValues.version = '9.4.3';
+      formValues.run_user = 'splunk';
+      formValues.install_dir = type === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk';
+      formValues.admin_password = 'changeme';
     } else if (type.includes('cribl')) {
-      form.setFieldsValue({ 
-        version: '3.4.1',
-        run_user: 'cribl',
-        install_dir: '/opt/cribl'
-      });
+      formValues.version = '3.4.1';
+      formValues.run_user = 'cribl';
+      formValues.install_dir = '/opt/cribl';
     } else if (type.includes('custom_command') || type.includes('bash_script')) {
-      form.setFieldsValue({
-        run_user: 'root',
-        command: type.includes('custom_command') ? 'echo "Hello World"' : '#!/bin/bash\n\necho "Hello World"'
-      });
+      formValues.run_user = 'root';
+      formValues.command = type.includes('custom_command') ? 'echo "Hello World"' : '#!/bin/bash\n\necho "Hello World"';
     } else {
-      form.setFieldsValue({ 
-        run_user: 'root',
-        install_dir: '/opt'
-      });
+      formValues.run_user = 'root';
+      formValues.install_dir = '/opt';
     }
+    
+    // Set all form values at once
+    form.setFieldsValue(formValues);
+    
+    // Log the form values for debugging
+    console.log(`Form values after setting ${type} defaults:`, form.getFieldsValue());
   };
 
   // Handle modal close
@@ -235,6 +238,11 @@ const NewJob: React.FC = () => {
   // Handle next step
   const handleNext = async (): Promise<void> => {
     try {
+      // Ensure host_id is set before validation
+      if (selectedHost?.id) {
+        form.setFieldValue('host_id', selectedHost.id);
+      }
+      
       await form.validateFields();
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -264,6 +272,9 @@ const NewJob: React.FC = () => {
       if (!selectedHost || !selectedHost.id) {
         throw new Error("No host selected");
       }
+      
+      // Explicitly set the host_id field before validation
+      form.setFieldValue('host_id', selectedHost.id);
       
       // Set default values for required fields if they're missing
       if (installType === 'splunk_uf') {
@@ -389,6 +400,7 @@ const NewJob: React.FC = () => {
         <Form.Item
           name="host_id"
           label="Target Host"
+          initialValue={selectedHost?.id}
           rules={[{ required: true, message: 'Please select a host' }]}
           hidden={true} // Hide this since we already selected the host
         >
@@ -575,6 +587,14 @@ const NewJob: React.FC = () => {
         // Step 1: Select installation type
         return (
           <div>
+            <Form.Item
+              name="host_id"
+              hidden={true}
+              initialValue={selectedHost?.id}
+            >
+              <Input type="hidden" />
+            </Form.Item>
+            
             <Form.Item
               name="install_type"
               label="Installation Type"
@@ -949,7 +969,7 @@ const NewJob: React.FC = () => {
         onCancel={handleModalClose}
         width={800}
         footer={null}
-        destroyOnHidden={true}
+        destroyOnClose={false}
       >
         <div className="install-modal-content">
           <Steps current={currentStep} style={{ marginBottom: 24 }}>
@@ -963,6 +983,7 @@ const NewJob: React.FC = () => {
             layout="vertical"
             name="installation_form"
             preserve={false}
+            initialValues={{ host_id: selectedHost?.id }}
           >
             {renderStepContent()}
           </Form>
