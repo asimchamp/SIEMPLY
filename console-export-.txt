@@ -1,48 +1,102 @@
 NewJob.tsx:152 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
-
 NewJob.tsx:159 Form initialized with host_id: 1
-antd.js?v=39169c3f:1638 Warning: Form already set 'initialValues' with path 'host_id'. Field can not overwrite it.
+antd.js?v=bb3d12d1:1638 Warning: Form already set 'initialValues' with path 'host_id'. Field can not overwrite it.
 NewJob.tsx:226 Form values after setting splunk_uf defaults: 
 {host_id: 1, install_type: 'splunk_uf'}
 NewJob.tsx:243 Warning: Warning: There may be circular references
-handleNext	@	NewJob.tsx:243
-NewJob.tsx:302 Form values on submit: 
-{}
-NewJob.tsx:329 Installing Splunk UF with validated parameters: 
-{version: undefined, install_dir: '/opt/splunkforwarder', admin_password: undefined, user: 'splunk', group: 'splunk', …}
-admin_password
-: 
-undefined
-deployment_app
-: 
-undefined
-deployment_server
-: 
-undefined
-group
-: 
-"splunk"
-install_dir
-: 
-"/opt/splunkforwarder"
-is_dry_run
-: 
-false
-user
-: 
-"splunk"
-version
-: 
-undefined
-[[Prototype]]
-: 
-Object
-api.ts:305 Direct Splunk UF installation with parameters: 
-{hostId: 1, parameters: {…}}
-api.ts:320 Direct Splunk UF installation error details: undefined
-installSplunkUF	@	api.ts:320
-handleSubmit	@	NewJob.tsx:331
-NewJob.tsx:378 Failed to submit job: Error: Splunk version is required
-    at Object.installSplunkUF (api.ts:336:29)
-    at Object.handleSubmit [as onClick] (NewJob.tsx:331:40)
-handleSubmit	@	NewJob.tsx:378
+NewJob.tsx:401 Warning: React has detected a change in the order of Hooks called by NewJob. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useState                   useState
+2. useState                   useState
+3. useState                   useState
+4. useState                   useState
+5. useRef                     useRef
+6. useState                   useState
+7. useRef                     useRef
+8. useMemo                    useMemo
+9. useState                   useState
+10. useState                  useState
+11. useState                  useState
+12. useState                  useState
+13. useState                  useState
+14. useState                  useState
+15. useState                  useState
+16. useContext                useContext
+17. useContext                useContext
+18. useContext                useContext
+19. useContext                useContext
+20. useContext                useContext
+21. useContext                useContext
+22. useContext                useContext
+23. useRef                    useRef
+24. useContext                useContext
+25. useLayoutEffect           useLayoutEffect
+26. useCallback               useCallback
+27. useEffect                 useEffect
+28. undefined                 useEffect
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at NewJob (http://192.168.100.45:8500/src/pages/NewJob.tsx:106:51)
+    at main
+    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69558:16
+    at Content
+    at div
+    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
+    at Layout
+    at div
+    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
+    at Layout
+    at AppLayout (http://192.168.100.45:8500/src/components/Layout.tsx:46:22)
+    at RequireAuth (http://192.168.100.45:8500/src/services/authContext.tsx:128:31)
+    at RenderedRoute (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4103:5)
+    at Routes (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4574:5)
+    at AuthProvider (http://192.168.100.45:8500/src/services/authContext.tsx:31:32)
+    at MotionWrapper (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8313:32)
+    at ProviderChildren (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8425:5)
+    at ConfigProvider (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8714:27)
+    at App (http://192.168.100.45:8500/src/App.tsx:34:35)
+    at QueryClientProvider (http://192.168.100.45:8500/node_modules/.vite/deps/@tanstack_react-query.js?v=78dcaac7:2839:3)
+    at Router (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4517:15)
+    at BrowserRouter (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:5266:5)
+
+chunk-V5LT2MCF.js?v=69237fbf:11698 Uncaught Error: Rendered more hooks than during the previous render.
+    at getInstallationFormFields (NewJob.tsx:401:5)
+    at renderStepContent (NewJob.tsx:621:14)
+    at NewJob (NewJob.tsx:997:14)
+chunk-V5LT2MCF.js?v=69237fbf:11698 Uncaught Error: Rendered more hooks than during the previous render.
+    at getInstallationFormFields (NewJob.tsx:401:5)
+    at renderStepContent (NewJob.tsx:621:14)
+    at NewJob (NewJob.tsx:997:14)
+chunk-V5LT2MCF.js?v=69237fbf:14052 The above error occurred in the <NewJob> component:
+
+    at NewJob (http://192.168.100.45:8500/src/pages/NewJob.tsx:106:51)
+    at main
+    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69558:16
+    at Content
+    at div
+    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
+    at Layout
+    at div
+    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
+    at Layout
+    at AppLayout (http://192.168.100.45:8500/src/components/Layout.tsx:46:22)
+    at RequireAuth (http://192.168.100.45:8500/src/services/authContext.tsx:128:31)
+    at RenderedRoute (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4103:5)
+    at Routes (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4574:5)
+    at AuthProvider (http://192.168.100.45:8500/src/services/authContext.tsx:31:32)
+    at MotionWrapper (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8313:32)
+    at ProviderChildren (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8425:5)
+    at ConfigProvider (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8714:27)
+    at App (http://192.168.100.45:8500/src/App.tsx:34:35)
+    at QueryClientProvider (http://192.168.100.45:8500/node_modules/.vite/deps/@tanstack_react-query.js?v=78dcaac7:2839:3)
+    at Router (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4517:15)
+    at BrowserRouter (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:5266:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-V5LT2MCF.js?v=69237fbf:11698 Uncaught Error: Rendered more hooks than during the previous render.
+    at getInstallationFormFields (NewJob.tsx:401:5)
+    at renderStepContent (NewJob.tsx:621:14)
+    at NewJob (NewJob.tsx:997:14)

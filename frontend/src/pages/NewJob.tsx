@@ -128,6 +128,22 @@ const NewJob: React.FC = () => {
     fetchHosts();
   }, []);
 
+  // Set default values for the current installation type
+  useEffect(() => {
+    if (installType && form) {
+      if (installType.includes('splunk')) {
+        // Set default values for Splunk installations
+        form.setFieldsValue({
+          version: '9.4.3',
+          run_user: 'splunk',
+          install_dir: installType === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
+          admin_password: 'changeme'
+        });
+        console.log("Form values set in useEffect:", form.getFieldsValue());
+      }
+    }
+  }, [installType, form]);
+
   // Fetch available hosts
   const fetchHosts = async (): Promise<void> => {
     try {
@@ -273,34 +289,34 @@ const NewJob: React.FC = () => {
         throw new Error("No host selected");
       }
       
-      // Explicitly set the host_id field before validation
-      form.setFieldValue('host_id', selectedHost.id);
+      // Set default values for required fields if missing
+      const defaultValues: Record<string, any> = {
+        host_id: selectedHost.id
+      };
       
-      // For Splunk UF, ensure required fields are set
+      // Add defaults based on installation type
       if (installType === 'splunk_uf') {
-        // Check if values are missing and set defaults
-        if (!form.getFieldValue('version')) {
-          form.setFieldValue('version', '9.4.3');
-        }
-        
-        if (!form.getFieldValue('admin_password')) {
-          form.setFieldValue('admin_password', 'changeme');
-        }
-        
-        if (!form.getFieldValue('install_dir')) {
-          form.setFieldValue('install_dir', '/opt/splunkforwarder');
-        }
-        
-        if (!form.getFieldValue('run_user')) {
-          form.setFieldValue('run_user', 'splunk');
-        }
-        
-        // Wait for form updates to apply
-        await new Promise(resolve => setTimeout(resolve, 100));
+        defaultValues['version'] = '9.4.3';
+        defaultValues['admin_password'] = 'changeme';
+        defaultValues['install_dir'] = '/opt/splunkforwarder';
+        defaultValues['run_user'] = 'splunk';
       }
       
-      // Validate form fields after ensuring defaults are set
-      const values = await form.validateFields();
+      // Set default values in form
+      form.setFieldsValue(defaultValues);
+      
+      // Wait for form updates to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get current form values
+      const currentValues = form.getFieldsValue(true);
+      console.log("Current form values before validation:", currentValues);
+      
+      // Validate form fields
+      await form.validateFields();
+      
+      // Get validated values
+      const values = form.getFieldsValue(true);
       console.log("Form values on submit:", values);
       
       // Always use the host ID from the selected host object
@@ -316,7 +332,7 @@ const NewJob: React.FC = () => {
           // Use direct installation for Splunk UF
           isDirectInstall = true;
           
-          // Use the validated form values directly
+          // Create parameters object with explicit defaults
           const splunkUFParams = {
             version: values.version || '9.4.3',
             install_dir: values.install_dir || '/opt/splunkforwarder',
@@ -334,6 +350,7 @@ const NewJob: React.FC = () => {
           
           // Set job ID for consistency in UI
           setJobId(`direct-splunk-uf-${Date.now()}`);
+          setDirectInstallResult(result);
           break;
           
         case 'splunk_enterprise':
@@ -365,12 +382,6 @@ const NewJob: React.FC = () => {
           break;
       }
       
-      // Store the result for direct installations
-      if (isDirectInstall && result) {
-        // Store the result in state for display
-        setDirectInstallResult(result);
-      }
-      
       // Move to next step
       setCurrentStep(currentStep + 1);
       message.success(isDirectInstall 
@@ -380,7 +391,7 @@ const NewJob: React.FC = () => {
       console.error('Failed to submit job:', error);
       
       // Extract error details from response if available
-      let errorDetail = error.response?.data?.detail || 'Failed to submit installation job. Please try again.';
+      let errorDetail = error.response?.data?.detail || error.message || 'Failed to submit installation job. Please try again.';
       
       // Format error detail if it's an array
       if (Array.isArray(errorDetail)) {
@@ -396,19 +407,6 @@ const NewJob: React.FC = () => {
   // Get installation form fields based on type
   const getInstallationFormFields = (): React.ReactNode => {
     if (!installType) return null;
-    
-    // Set default values for the current installation type
-    useEffect(() => {
-      if (installType.includes('splunk')) {
-        // Set default values for Splunk installations
-        form.setFieldsValue({
-          version: '9.4.3',
-          run_user: 'splunk',
-          install_dir: installType === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
-          admin_password: 'changeme'
-        });
-      }
-    }, [installType]);
     
     const commonFields = (
       <>
