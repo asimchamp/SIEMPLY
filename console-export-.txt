@@ -1,38 +1,117 @@
-Failed to submit job: Error: No host selected
-    handleSubmit NewJob.tsx:243
-    handleClick button.js:186
-    React 15
-        callCallback2
-        invokeGuardedCallbackDev
-        invokeGuardedCallback
-        invokeGuardedCallbackAndCatchFirstError
-        executeDispatch
-        processDispatchQueueItemsInOrder
-        processDispatchQueue
-        dispatchEventsForPlugins
-        dispatchEventForPluginEventSystem
-        batchedUpdates$1
-        batchedUpdates
-        dispatchEventForPluginEventSystem
-        dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-        dispatchEvent
-        dispatchDiscreteEvent
-NewJob.tsx:339:15
-    handleSubmit NewJob.tsx:339
-    handleClick button.js:186
-    React 15
-        callCallback2
-        invokeGuardedCallbackDev
-        invokeGuardedCallback
-        invokeGuardedCallbackAndCatchFirstError
-        executeDispatch
-        processDispatchQueueItemsInOrder
-        processDispatchQueue
-        dispatchEventsForPlugins
-        dispatchEventForPluginEventSystem
-        batchedUpdates$1
-        batchedUpdates
-        dispatchEventForPluginEventSystem
-        dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-        dispatchEvent
-        dispatchDiscreteEvent
+antd.js?v=31729e72:1638 Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+warning @ antd.js?v=31729e72:1638
+call @ antd.js?v=31729e72:1657
+warningOnce @ antd.js?v=31729e72:1662
+warning2 @ antd.js?v=31729e72:4759
+typeWarning @ antd.js?v=31729e72:4785
+typeWarning.deprecated @ antd.js?v=31729e72:4790
+(anonymous) @ antd.js?v=31729e72:22284
+Modal @ antd.js?v=31729e72:22283
+renderWithHooks @ chunk-V5LT2MCF.js?v=f95a054d:11568
+mountIndeterminateComponent @ chunk-V5LT2MCF.js?v=f95a054d:14946
+beginWork @ chunk-V5LT2MCF.js?v=f95a054d:15934
+beginWork$1 @ chunk-V5LT2MCF.js?v=f95a054d:19781
+performUnitOfWork @ chunk-V5LT2MCF.js?v=f95a054d:19226
+workLoopSync @ chunk-V5LT2MCF.js?v=f95a054d:19165
+renderRootSync @ chunk-V5LT2MCF.js?v=f95a054d:19144
+performSyncWorkOnRoot @ chunk-V5LT2MCF.js?v=f95a054d:18902
+flushSyncCallbacks @ chunk-V5LT2MCF.js?v=f95a054d:9135
+(anonymous) @ chunk-V5LT2MCF.js?v=f95a054d:18655
+NewJob.tsx:152 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
+warning @ antd.js?v=31729e72:1638
+call @ antd.js?v=31729e72:1657
+warningOnce @ antd.js?v=31729e72:1662
+(anonymous) @ antd.js?v=31729e72:19880
+setTimeout
+(anonymous) @ antd.js?v=31729e72:19877
+(anonymous) @ antd.js?v=31729e72:20129
+handleHostSelect @ NewJob.tsx:152
+onClick @ NewJob.tsx:800
+callCallback2 @ chunk-V5LT2MCF.js?v=f95a054d:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=f95a054d:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=f95a054d:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=f95a054d:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=f95a054d:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=f95a054d:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=f95a054d:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=f95a054d:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=f95a054d:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=f95a054d:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=f95a054d:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=f95a054d:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=f95a054d:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=f95a054d:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=f95a054d:5449
+NewJob.tsx:259 Submitting job for splunk_uf with parameters: {version: undefined, install_dir: '/opt', user: 'root', admin_password: undefined, group: 'root'}
+api.ts:305 Direct Splunk UF installation with parameters: {hostId: 1, parameters: {…}}
+api.ts:308 
+            
+            
+           POST http://192.168.100.45:5050/splunk/1/install-uf 422 (Unprocessable Entity)
+dispatchXhrRequest @ axios.js?v=47624266:1662
+xhr @ axios.js?v=47624266:1542
+dispatchRequest @ axios.js?v=47624266:2017
+Promise.then
+_request @ axios.js?v=47624266:2220
+request @ axios.js?v=47624266:2129
+httpMethod @ axios.js?v=47624266:2267
+wrap @ axios.js?v=47624266:8
+installSplunkUF @ api.ts:308
+handleSubmit @ NewJob.tsx:287
+await in handleSubmit
+(anonymous) @ antd.js?v=31729e72:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=f95a054d:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=f95a054d:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=f95a054d:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=f95a054d:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=f95a054d:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=f95a054d:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=f95a054d:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=f95a054d:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=f95a054d:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=f95a054d:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=f95a054d:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=f95a054d:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=f95a054d:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=f95a054d:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=f95a054d:5449
+api.ts:311 Direct Splunk UF installation error details: {detail: Array(2)}
+installSplunkUF @ api.ts:311
+await in installSplunkUF
+handleSubmit @ NewJob.tsx:287
+await in handleSubmit
+(anonymous) @ antd.js?v=31729e72:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=f95a054d:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=f95a054d:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=f95a054d:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=f95a054d:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=f95a054d:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=f95a054d:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=f95a054d:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=f95a054d:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=f95a054d:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=f95a054d:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=f95a054d:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=f95a054d:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=f95a054d:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=f95a054d:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=f95a054d:5449
+NewJob.tsx:343 Failed to submit job: AxiosError {message: 'Request failed with status code 422', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+handleSubmit @ NewJob.tsx:343
+await in handleSubmit
+(anonymous) @ antd.js?v=31729e72:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=f95a054d:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=f95a054d:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=f95a054d:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=f95a054d:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=f95a054d:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=f95a054d:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=f95a054d:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=f95a054d:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=f95a054d:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=f95a054d:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=f95a054d:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=f95a054d:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=f95a054d:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=f95a054d:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=f95a054d:5449

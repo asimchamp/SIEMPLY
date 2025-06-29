@@ -148,7 +148,7 @@ const NewJob: React.FC = () => {
     setSelectedHost(host);
     setIsModalVisible(true);
     
-    // Initialize form with host ID
+    // Reset the form and initialize with host ID
     form.resetFields();
     form.setFieldsValue({
       host_id: host.id
@@ -166,20 +166,44 @@ const NewJob: React.FC = () => {
     form.setFieldsValue({
       host_id: selectedHost?.id
     });
+    
+    // Initialize default values based on category
+    if (category === InstallCategory.SPLUNK) {
+      form.setFieldsValue({
+        version: '9.4.3',
+        run_user: 'splunk',
+        admin_password: 'changeme'
+      });
+    } else if (category === InstallCategory.CRIBL) {
+      form.setFieldsValue({
+        version: '3.4.1',
+        run_user: 'cribl'
+      });
+    } else {
+      form.setFieldsValue({
+        run_user: 'root'
+      });
+    }
   };
 
   // Handle installation type change
   const handleInstallTypeChange = (type: string): void => {
     setInstallType(type);
     
-    // Reset form fields based on type
+    // Reset form fields based on type with explicit default values
     if (type.includes('splunk')) {
-      form.setFieldsValue({ 
-        version: '9.4.3',
-        run_user: 'splunk',
-        install_dir: type === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
-        admin_password: 'changeme'
-      });
+      const defaultVersion = '9.4.3';
+      
+      // Set default values for Splunk installations
+      setTimeout(() => {
+        form.setFieldsValue({ 
+          version: defaultVersion,
+          run_user: 'splunk',
+          install_dir: type === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
+          admin_password: 'changeme'
+        });
+        console.log("Form values after setting defaults:", form.getFieldsValue());
+      }, 0);
     } else if (type.includes('cribl')) {
       form.setFieldsValue({ 
         version: '3.4.1',
@@ -241,50 +265,33 @@ const NewJob: React.FC = () => {
         throw new Error("No host selected");
       }
       
-      // Validate form fields
-      const values = await form.validateFields();
-      const { version, install_dir, is_dry_run, run_user, command, admin_password } = values;
-      
-      // Validate required fields for Splunk UF
+      // Set default values for required fields if they're missing
       if (installType === 'splunk_uf') {
-        if (!version) {
-          throw new Error("Splunk version is required");
+        const currentValues = form.getFieldsValue();
+        let needsUpdate = false;
+        
+        if (!currentValues.version) {
+          form.setFieldValue('version', '9.4.3');
+          needsUpdate = true;
         }
-        if (!admin_password) {
-          throw new Error("Admin password is required");
+        
+        if (!currentValues.admin_password) {
+          form.setFieldValue('admin_password', 'changeme');
+          needsUpdate = true;
+        }
+        
+        // If we updated any fields, wait a moment for the form to update
+        if (needsUpdate) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
+      
+      // Validate form fields after ensuring defaults are set
+      const values = await form.validateFields();
+      console.log("Form values on submit:", values);
       
       // Always use the host ID from the selected host object
       const host_id = selectedHost.id;
-      
-      // Prepare parameters based on installation type
-      const parameters: Record<string, any> = {
-        version,
-        install_dir: install_dir || '/opt',
-        user: run_user || 'root',
-        admin_password,
-        group: run_user || 'root'
-      };
-      
-      console.log(`Submitting job for ${installType} with parameters:`, parameters);
-      
-      // Add additional parameters based on installation type
-      if (installType === 'splunk_uf') {
-        if (values.deployment_server) {
-          parameters.deployment_server = values.deployment_server;
-        }
-        if (values.deployment_app) {
-          parameters.deployment_app = values.deployment_app;
-        }
-      } else if (installType === 'splunk_enterprise') {
-        parameters.license_master = values.license_master;
-      } else if (installType === 'cribl_worker') {
-        parameters.leader_url = values.leader_url;
-        parameters.auth_token = values.auth_token;
-      } else if (installType === 'custom_command' || installType === 'bash_script') {
-        parameters.command = command;
-      }
       
       // Submit job based on installation type
       let job;
@@ -296,16 +303,16 @@ const NewJob: React.FC = () => {
           // Use direct installation for Splunk UF
           isDirectInstall = true;
           
-          // Ensure all required parameters are set
+          // Use the validated form values directly
           const splunkUFParams = {
-            version: version || '9.4.3',
-            install_dir: install_dir || '/opt/splunkforwarder',
-            admin_password: admin_password || 'changeme',
-            user: run_user || 'splunk',
-            group: run_user || 'splunk',
+            version: values.version,
+            install_dir: values.install_dir || '/opt/splunkforwarder',
+            admin_password: values.admin_password,
+            user: values.run_user || 'splunk',
+            group: values.run_user || 'splunk',
             deployment_server: values.deployment_server,
             deployment_app: values.deployment_app,
-            is_dry_run: is_dry_run || false
+            is_dry_run: values.is_dry_run || false
           };
           
           console.log("Installing Splunk UF with validated parameters:", splunkUFParams);
@@ -317,30 +324,30 @@ const NewJob: React.FC = () => {
           break;
           
         case 'splunk_enterprise':
-          job = await jobService.installSplunkEnterprise(host_id, parameters, is_dry_run);
+          job = await jobService.installSplunkEnterprise(host_id, values, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         case 'cribl_leader':
-          job = await jobService.installCriblLeader(host_id, parameters, is_dry_run);
+          job = await jobService.installCriblLeader(host_id, values, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         case 'cribl_worker':
-          job = await jobService.installCriblWorker(host_id, parameters, is_dry_run);
+          job = await jobService.installCriblWorker(host_id, values, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         case 'custom_command':
         case 'bash_script':
           // Use a generic job submission for user commands
-          job = await jobService.submitCustomJob(host_id, installType, parameters, is_dry_run);
+          job = await jobService.submitCustomJob(host_id, installType, values, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         default:
           // For other types
-          job = await jobService.installSplunkUF(host_id, parameters, is_dry_run);
+          job = await jobService.installSplunkUF(host_id, values, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
       }
@@ -410,6 +417,20 @@ const NewJob: React.FC = () => {
     
     // Render fields based on installation type
     if (installType.includes('splunk')) {
+      // Ensure version is set
+      const defaultVersion = '9.4.3';
+      
+      // Set default values if they're not already set
+      setTimeout(() => {
+        const currentValues = form.getFieldsValue();
+        if (!currentValues.version) {
+          form.setFieldValue('version', defaultVersion);
+        }
+        if (!currentValues.admin_password) {
+          form.setFieldValue('admin_password', 'changeme');
+        }
+      }, 0);
+      
       return (
         <>
           {commonFields}
@@ -417,6 +438,7 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="version"
             label="Splunk Version"
+            initialValue={defaultVersion}
             rules={[{ required: true, message: 'Please select a version' }]}
           >
             <Select placeholder="Select Splunk version">
@@ -453,6 +475,7 @@ const NewJob: React.FC = () => {
               <Form.Item
                 name="admin_password"
                 label="Admin Password"
+                initialValue="changeme"
                 rules={[{ required: true, message: 'Please enter admin password' }]}
               >
                 <Input.Password placeholder="Admin password" />
@@ -938,7 +961,8 @@ const NewJob: React.FC = () => {
           <Form
             form={form}
             layout="vertical"
-            name="splunk_installation_form"
+            name="installation_form"
+            preserve={false}
           >
             {renderStepContent()}
           </Form>
