@@ -305,11 +305,37 @@ export const splunkService = {
     console.log("Direct Splunk UF installation with parameters:", { hostId, parameters });
     
     try {
+      // Validate required parameters before sending
+      if (!parameters.version) {
+        throw new Error("Splunk version is required");
+      }
+      
+      if (!parameters.admin_password) {
+        throw new Error("Admin password is required");
+      }
+      
       const response = await api.post(`/splunk/${hostId}/install-uf`, parameters);
       return response.data;
     } catch (error: any) {
       console.error("Direct Splunk UF installation error details:", error.response?.data);
-      throw error;
+      
+      // Format error message for better display
+      let errorMessage = "Failed to install Splunk Universal Forwarder";
+      
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map((err: any) => err.msg || String(err)).join(", ");
+        } else {
+          errorMessage = error.response.data.detail;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Rethrow with better error message
+      const enhancedError = new Error(errorMessage);
+      enhancedError.name = error.name || "SplunkInstallError";
+      throw enhancedError;
     }
   }
 };

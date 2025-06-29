@@ -241,8 +241,19 @@ const NewJob: React.FC = () => {
         throw new Error("No host selected");
       }
       
+      // Validate form fields
       const values = await form.validateFields();
       const { version, install_dir, is_dry_run, run_user, command, admin_password } = values;
+      
+      // Validate required fields for Splunk UF
+      if (installType === 'splunk_uf') {
+        if (!version) {
+          throw new Error("Splunk version is required");
+        }
+        if (!admin_password) {
+          throw new Error("Admin password is required");
+        }
+      }
       
       // Always use the host ID from the selected host object
       const host_id = selectedHost.id;
@@ -284,16 +295,22 @@ const NewJob: React.FC = () => {
         case 'splunk_uf':
           // Use direct installation for Splunk UF
           isDirectInstall = true;
-          result = await splunkService.installSplunkUF(host_id, {
-            version,
-            install_dir: install_dir || '/opt',
-            admin_password,
+          
+          // Ensure all required parameters are set
+          const splunkUFParams = {
+            version: version || '9.4.3',
+            install_dir: install_dir || '/opt/splunkforwarder',
+            admin_password: admin_password || 'changeme',
             user: run_user || 'splunk',
             group: run_user || 'splunk',
             deployment_server: values.deployment_server,
             deployment_app: values.deployment_app,
-            is_dry_run
-          });
+            is_dry_run: is_dry_run || false
+          };
+          
+          console.log("Installing Splunk UF with validated parameters:", splunkUFParams);
+          
+          result = await splunkService.installSplunkUF(host_id, splunkUFParams);
           
           // Set job ID for consistency in UI
           setJobId(`direct-splunk-uf-${Date.now()}`);
@@ -909,7 +926,7 @@ const NewJob: React.FC = () => {
         onCancel={handleModalClose}
         width={800}
         footer={null}
-        destroyOnClose={true}
+        destroyOnHidden={true}
       >
         <div className="install-modal-content">
           <Steps current={currentStep} style={{ marginBottom: 24 }}>
@@ -921,6 +938,7 @@ const NewJob: React.FC = () => {
           <Form
             form={form}
             layout="vertical"
+            name="splunk_installation_form"
           >
             {renderStepContent()}
           </Form>
