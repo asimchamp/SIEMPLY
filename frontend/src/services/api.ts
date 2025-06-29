@@ -305,16 +305,30 @@ export const splunkService = {
     console.log("Direct Splunk UF installation with parameters:", { hostId, parameters });
     
     try {
+      // Ensure required parameters are set with defaults if not provided
+      const finalParams = {
+        version: parameters.version || '9.4.3',
+        install_dir: parameters.install_dir || '/opt/splunkforwarder',
+        admin_password: parameters.admin_password || 'changeme',
+        user: parameters.user || 'splunk',
+        group: parameters.group || 'splunk',
+        deployment_server: parameters.deployment_server,
+        deployment_app: parameters.deployment_app,
+        is_dry_run: parameters.is_dry_run || false
+      };
+      
       // Validate required parameters before sending
-      if (!parameters.version) {
+      if (!finalParams.version) {
         throw new Error("Splunk version is required");
       }
       
-      if (!parameters.admin_password) {
+      if (!finalParams.admin_password) {
         throw new Error("Admin password is required");
       }
       
-      const response = await api.post(`/splunk/${hostId}/install-uf`, parameters);
+      console.log("Sending Splunk UF installation request with parameters:", finalParams);
+      
+      const response = await api.post(`/splunk/${hostId}/install-uf`, finalParams);
       return response.data;
     } catch (error: any) {
       console.error("Direct Splunk UF installation error details:", error.response?.data);

@@ -1,93 +1,48 @@
-NewJob.tsx:205 Form values after setting defaults: 
-{install_type: 'splunk_uf'}
-NewJob.tsx:241 Validation failed: 
-{values: {…}, errorFields: Array(1), outOfDate: false}
-errorFields
-: 
-Array(1)
-0
-: 
-errors
-: 
-Array(1)
-0
-: 
-"Please select a host"
-length
-: 
-1
-[[Prototype]]
-: 
-Array(0)
-name
-: 
-Array(1)
-0
-: 
-"host_id"
-length
-: 
-1
-[[Prototype]]
-: 
-Array(0)
-warnings
-: 
-Array(0)
-length
-: 
-0
-[[Prototype]]
-: 
-Array(0)
-[[Prototype]]
-: 
-Object
-length
-: 
-1
-[[Prototype]]
-: 
-Array(0)
-outOfDate
-: 
-false
-values
-: 
+NewJob.tsx:152 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
+
+NewJob.tsx:159 Form initialized with host_id: 1
+antd.js?v=39169c3f:1638 Warning: Form already set 'initialValues' with path 'host_id'. Field can not overwrite it.
+NewJob.tsx:226 Form values after setting splunk_uf defaults: 
+{host_id: 1, install_type: 'splunk_uf'}
+NewJob.tsx:243 Warning: Warning: There may be circular references
+handleNext	@	NewJob.tsx:243
+NewJob.tsx:302 Form values on submit: 
+{}
+NewJob.tsx:329 Installing Splunk UF with validated parameters: 
+{version: undefined, install_dir: '/opt/splunkforwarder', admin_password: undefined, user: 'splunk', group: 'splunk', …}
 admin_password
 : 
-"changeme"
+undefined
 deployment_app
 : 
-"search"
+undefined
 deployment_server
 : 
-"192.168.100.45"
-host_id
-: 
 undefined
+group
+: 
+"splunk"
 install_dir
 : 
-"/opt"
+"/opt/splunkforwarder"
 is_dry_run
 : 
-undefined
-run_user
+false
+user
 : 
 "splunk"
 version
 : 
-"9.4.3"
+undefined
 [[Prototype]]
 : 
 Object
-[[Prototype]]
-: 
-Object
-handleNext	@	NewJob.tsx:241
-
-NewJob.tsx:152 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
-setTimeout		
-handleHostSelect	@	NewJob.tsx:152
-onClick	@	NewJob.tsx:840
-
+api.ts:305 Direct Splunk UF installation with parameters: 
+{hostId: 1, parameters: {…}}
+api.ts:320 Direct Splunk UF installation error details: undefined
+installSplunkUF	@	api.ts:320
+handleSubmit	@	NewJob.tsx:331
+NewJob.tsx:378 Failed to submit job: Error: Splunk version is required
+    at Object.installSplunkUF (api.ts:336:29)
+    at Object.handleSubmit [as onClick] (NewJob.tsx:331:40)
+handleSubmit	@	NewJob.tsx:378

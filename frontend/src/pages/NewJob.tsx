@@ -276,25 +276,27 @@ const NewJob: React.FC = () => {
       // Explicitly set the host_id field before validation
       form.setFieldValue('host_id', selectedHost.id);
       
-      // Set default values for required fields if they're missing
+      // For Splunk UF, ensure required fields are set
       if (installType === 'splunk_uf') {
-        const currentValues = form.getFieldsValue();
-        let needsUpdate = false;
-        
-        if (!currentValues.version) {
+        // Check if values are missing and set defaults
+        if (!form.getFieldValue('version')) {
           form.setFieldValue('version', '9.4.3');
-          needsUpdate = true;
         }
         
-        if (!currentValues.admin_password) {
+        if (!form.getFieldValue('admin_password')) {
           form.setFieldValue('admin_password', 'changeme');
-          needsUpdate = true;
         }
         
-        // If we updated any fields, wait a moment for the form to update
-        if (needsUpdate) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+        if (!form.getFieldValue('install_dir')) {
+          form.setFieldValue('install_dir', '/opt/splunkforwarder');
         }
+        
+        if (!form.getFieldValue('run_user')) {
+          form.setFieldValue('run_user', 'splunk');
+        }
+        
+        // Wait for form updates to apply
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       // Validate form fields after ensuring defaults are set
@@ -316,9 +318,9 @@ const NewJob: React.FC = () => {
           
           // Use the validated form values directly
           const splunkUFParams = {
-            version: values.version,
+            version: values.version || '9.4.3',
             install_dir: values.install_dir || '/opt/splunkforwarder',
-            admin_password: values.admin_password,
+            admin_password: values.admin_password || 'changeme',
             user: values.run_user || 'splunk',
             group: values.run_user || 'splunk',
             deployment_server: values.deployment_server,
@@ -395,6 +397,19 @@ const NewJob: React.FC = () => {
   const getInstallationFormFields = (): React.ReactNode => {
     if (!installType) return null;
     
+    // Set default values for the current installation type
+    useEffect(() => {
+      if (installType.includes('splunk')) {
+        // Set default values for Splunk installations
+        form.setFieldsValue({
+          version: '9.4.3',
+          run_user: 'splunk',
+          install_dir: installType === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
+          admin_password: 'changeme'
+        });
+      }
+    }, [installType]);
+    
     const commonFields = (
       <>
         <Form.Item
@@ -429,20 +444,6 @@ const NewJob: React.FC = () => {
     
     // Render fields based on installation type
     if (installType.includes('splunk')) {
-      // Ensure version is set
-      const defaultVersion = '9.4.3';
-      
-      // Set default values if they're not already set
-      setTimeout(() => {
-        const currentValues = form.getFieldsValue();
-        if (!currentValues.version) {
-          form.setFieldValue('version', defaultVersion);
-        }
-        if (!currentValues.admin_password) {
-          form.setFieldValue('admin_password', 'changeme');
-        }
-      }, 0);
-      
       return (
         <>
           {commonFields}
@@ -450,10 +451,10 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="version"
             label="Splunk Version"
-            initialValue={defaultVersion}
+            initialValue="9.4.3"
             rules={[{ required: true, message: 'Please select a version' }]}
           >
-            <Select placeholder="Select Splunk version">
+            <Select placeholder="Select Splunk version" defaultValue="9.4.3">
               {SPLUNK_VERSIONS.map(version => (
                 <Option key={version} value={version}>{version}</Option>
               ))}
@@ -969,7 +970,7 @@ const NewJob: React.FC = () => {
         onCancel={handleModalClose}
         width={800}
         footer={null}
-        destroyOnClose={false}
+        destroyOnClose={true}
       >
         <div className="install-modal-content">
           <Steps current={currentStep} style={{ marginBottom: 24 }}>
@@ -983,7 +984,15 @@ const NewJob: React.FC = () => {
             layout="vertical"
             name="installation_form"
             preserve={false}
-            initialValues={{ host_id: selectedHost?.id }}
+            initialValues={{ 
+              host_id: selectedHost?.id,
+              version: installType?.includes('splunk') ? '9.4.3' : undefined,
+              admin_password: installType?.includes('splunk') ? 'changeme' : undefined,
+              run_user: installType?.includes('splunk') ? 'splunk' : 'root',
+              install_dir: installType === 'splunk_uf' ? '/opt/splunkforwarder' : 
+                           installType?.includes('splunk') ? '/opt/splunk' : 
+                           installType?.includes('cribl') ? '/opt/cribl' : '/opt'
+            }}
           >
             {renderStepContent()}
           </Form>
