@@ -236,12 +236,16 @@ const NewJob: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const values = await form.validateFields();
-      const { host_id, version, install_dir, is_dry_run, run_user, command, admin_password } = values;
-      
-      if (!host_id) {
+      // Make sure we have the host ID from the selected host
+      if (!selectedHost || !selectedHost.id) {
         throw new Error("No host selected");
       }
+      
+      const values = await form.validateFields();
+      const { version, install_dir, is_dry_run, run_user, command, admin_password } = values;
+      
+      // Always use the host ID from the selected host object
+      const host_id = selectedHost.id;
       
       // Prepare parameters based on installation type
       const parameters: Record<string, any> = {

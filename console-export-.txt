@@ -1,96 +1,38 @@
-NewJob.tsx:147 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
-warning @ antd.js?v=afa42c6a:1638
-call @ antd.js?v=afa42c6a:1657
-warningOnce @ antd.js?v=afa42c6a:1662
-(anonymous) @ antd.js?v=afa42c6a:19880
-setTimeout
-(anonymous) @ antd.js?v=afa42c6a:19877
-(anonymous) @ antd.js?v=afa42c6a:20129
-handleCategorySelect @ NewJob.tsx:147
-onClick @ NewJob.tsx:686
-callCallback2 @ chunk-V5LT2MCF.js?v=bd1b9fb7:3674
-invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=bd1b9fb7:3699
-invokeGuardedCallback @ chunk-V5LT2MCF.js?v=bd1b9fb7:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=bd1b9fb7:3736
-executeDispatch @ chunk-V5LT2MCF.js?v=bd1b9fb7:7016
-processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=bd1b9fb7:7036
-processDispatchQueue @ chunk-V5LT2MCF.js?v=bd1b9fb7:7045
-dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=bd1b9fb7:7053
-(anonymous) @ chunk-V5LT2MCF.js?v=bd1b9fb7:7177
-batchedUpdates$1 @ chunk-V5LT2MCF.js?v=bd1b9fb7:18941
-batchedUpdates @ chunk-V5LT2MCF.js?v=bd1b9fb7:3579
-dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=bd1b9fb7:7176
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=bd1b9fb7:5478
-dispatchEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5472
-dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5449
-NewJob.tsx:245 Submitting job for splunk_uf with parameters: {version: undefined, install_dir: '/opt', user: 'root', admin_password: 'changeme', group: 'root'}
-api.ts:229 Installing Splunk UF with parameters: {hostId: undefined, parameters: {…}, isDryRun: false}
-api.ts:232 
-            
-            
-           POST http://192.168.100.45:5050/jobs/install/splunk-uf 422 (Unprocessable Entity)
-dispatchXhrRequest @ axios.js?v=efd5f55e:1662
-xhr @ axios.js?v=efd5f55e:1542
-dispatchRequest @ axios.js?v=efd5f55e:2017
-Promise.then
-_request @ axios.js?v=efd5f55e:2220
-request @ axios.js?v=efd5f55e:2129
-httpMethod @ axios.js?v=efd5f55e:2267
-wrap @ axios.js?v=efd5f55e:8
-installSplunkUF @ api.ts:232
-handleSubmit @ NewJob.tsx:268
-(anonymous) @ antd.js?v=afa42c6a:16539
-callCallback2 @ chunk-V5LT2MCF.js?v=bd1b9fb7:3674
-invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=bd1b9fb7:3699
-invokeGuardedCallback @ chunk-V5LT2MCF.js?v=bd1b9fb7:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=bd1b9fb7:3736
-executeDispatch @ chunk-V5LT2MCF.js?v=bd1b9fb7:7016
-processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=bd1b9fb7:7036
-processDispatchQueue @ chunk-V5LT2MCF.js?v=bd1b9fb7:7045
-dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=bd1b9fb7:7053
-(anonymous) @ chunk-V5LT2MCF.js?v=bd1b9fb7:7177
-batchedUpdates$1 @ chunk-V5LT2MCF.js?v=bd1b9fb7:18941
-batchedUpdates @ chunk-V5LT2MCF.js?v=bd1b9fb7:3579
-dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=bd1b9fb7:7176
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=bd1b9fb7:5478
-dispatchEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5472
-dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5449
-api.ts:239 Splunk UF installation error details: {detail: Array(1)}
-installSplunkUF @ api.ts:239
-await in installSplunkUF
-handleSubmit @ NewJob.tsx:268
-(anonymous) @ antd.js?v=afa42c6a:16539
-callCallback2 @ chunk-V5LT2MCF.js?v=bd1b9fb7:3674
-invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=bd1b9fb7:3699
-invokeGuardedCallback @ chunk-V5LT2MCF.js?v=bd1b9fb7:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=bd1b9fb7:3736
-executeDispatch @ chunk-V5LT2MCF.js?v=bd1b9fb7:7016
-processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=bd1b9fb7:7036
-processDispatchQueue @ chunk-V5LT2MCF.js?v=bd1b9fb7:7045
-dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=bd1b9fb7:7053
-(anonymous) @ chunk-V5LT2MCF.js?v=bd1b9fb7:7177
-batchedUpdates$1 @ chunk-V5LT2MCF.js?v=bd1b9fb7:18941
-batchedUpdates @ chunk-V5LT2MCF.js?v=bd1b9fb7:3579
-dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=bd1b9fb7:7176
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=bd1b9fb7:5478
-dispatchEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5472
-dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5449
-NewJob.tsx:295 Failed to submit job: AxiosError {message: 'Request failed with status code 422', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
-handleSubmit @ NewJob.tsx:295
-await in handleSubmit
-(anonymous) @ antd.js?v=afa42c6a:16539
-callCallback2 @ chunk-V5LT2MCF.js?v=bd1b9fb7:3674
-invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=bd1b9fb7:3699
-invokeGuardedCallback @ chunk-V5LT2MCF.js?v=bd1b9fb7:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=bd1b9fb7:3736
-executeDispatch @ chunk-V5LT2MCF.js?v=bd1b9fb7:7016
-processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=bd1b9fb7:7036
-processDispatchQueue @ chunk-V5LT2MCF.js?v=bd1b9fb7:7045
-dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=bd1b9fb7:7053
-(anonymous) @ chunk-V5LT2MCF.js?v=bd1b9fb7:7177
-batchedUpdates$1 @ chunk-V5LT2MCF.js?v=bd1b9fb7:18941
-batchedUpdates @ chunk-V5LT2MCF.js?v=bd1b9fb7:3579
-dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=bd1b9fb7:7176
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=bd1b9fb7:5478
-dispatchEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5472
-dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=bd1b9fb7:5449
+Failed to submit job: Error: No host selected
+    handleSubmit NewJob.tsx:243
+    handleClick button.js:186
+    React 15
+        callCallback2
+        invokeGuardedCallbackDev
+        invokeGuardedCallback
+        invokeGuardedCallbackAndCatchFirstError
+        executeDispatch
+        processDispatchQueueItemsInOrder
+        processDispatchQueue
+        dispatchEventsForPlugins
+        dispatchEventForPluginEventSystem
+        batchedUpdates$1
+        batchedUpdates
+        dispatchEventForPluginEventSystem
+        dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+        dispatchEvent
+        dispatchDiscreteEvent
+NewJob.tsx:339:15
+    handleSubmit NewJob.tsx:339
+    handleClick button.js:186
+    React 15
+        callCallback2
+        invokeGuardedCallbackDev
+        invokeGuardedCallback
+        invokeGuardedCallbackAndCatchFirstError
+        executeDispatch
+        processDispatchQueueItemsInOrder
+        processDispatchQueue
+        dispatchEventsForPlugins
+        dispatchEventForPluginEventSystem
+        batchedUpdates$1
+        batchedUpdates
+        dispatchEventForPluginEventSystem
+        dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+        dispatchEvent
+        dispatchDiscreteEvent

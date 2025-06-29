@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from backend.models import get_db, Host
-from backend.installers.splunk import install_splunk_universal_forwarder
+from backend.automation.splunk_installer import install_splunk_uf
 import logging
 
 router = APIRouter(
@@ -50,8 +50,8 @@ async def install_uf(
         # Convert params to dictionary
         parameters = params.dict()
         
-        # Install Splunk UF
-        result = await install_splunk_universal_forwarder(host, parameters)
+        # Install Splunk UF using the dedicated module
+        result = await install_splunk_uf(host, parameters)
         
         # If installation was successful, update host in database
         if result.get("success") and not params.is_dry_run:
