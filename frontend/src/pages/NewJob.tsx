@@ -6,7 +6,6 @@ import {
   Row, 
   Col, 
   Divider, 
-  Space, 
   Modal, 
   Form, 
   Input, 
@@ -16,10 +15,10 @@ import {
   Alert, 
   Result, 
   Spin,
-  Tooltip,
   message,
   Empty,
-  Tag
+  Tag,
+  Tooltip
 } from 'antd';
 import { 
   CloudDownloadOutlined, 
@@ -40,7 +39,7 @@ import { useNavigate } from 'react-router-dom';
 // import { motion } from 'framer-motion';
 import { hostService, jobService, Host } from '../services/api';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { Step } = Steps;
 
@@ -166,40 +165,19 @@ const NewJob: React.FC = () => {
     form.setFieldsValue({
       host_id: selectedHost?.id
     });
-    
-    // Initialize default values based on category
-    if (category === InstallCategory.SPLUNK) {
-      form.setFieldsValue({
-        run_user: 'splunk',
-        version: '9.4.3',
-        admin_password: 'changeme'
-      });
-    } else if (category === InstallCategory.CRIBL) {
-      form.setFieldsValue({
-        run_user: 'cribl',
-        version: '3.4.1'
-      });
-    } else if (category === InstallCategory.USER) {
-      form.setFieldsValue({
-        run_user: 'root'
-      });
-    } else {
-      form.setFieldsValue({
-        run_user: 'root'
-      });
-    }
   };
 
   // Handle installation type change
   const handleInstallTypeChange = (type: string): void => {
     setInstallType(type);
     
-    // Reset version field based on type
+    // Reset form fields based on type
     if (type.includes('splunk')) {
       form.setFieldsValue({ 
         version: '9.4.3',
         run_user: 'splunk',
-        install_dir: '/opt/splunkforwarder' // Use correct default path for Splunk UF
+        install_dir: type === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
+        admin_password: 'changeme'
       });
     } else if (type.includes('cribl')) {
       form.setFieldsValue({ 
@@ -260,19 +238,19 @@ const NewJob: React.FC = () => {
       const values = await form.validateFields();
       const { host_id, version, install_dir, is_dry_run, run_user, command, admin_password } = values;
       
+      if (!host_id) {
+        throw new Error("No host selected");
+      }
+      
       // Prepare parameters based on installation type
       const parameters: Record<string, any> = {
-        version: version || (installType.includes('splunk') ? '9.4.3' : '3.4.1'),
+        version,
         install_dir: install_dir || '/opt',
-        // Map run_user to user for backend compatibility
         user: run_user || 'root',
-        // Add default admin password if not provided
-        admin_password: admin_password || 'changeme',
-        // Add group parameter matching the user
+        admin_password,
         group: run_user || 'root'
       };
       
-      // Log the parameters being sent
       console.log(`Submitting job for ${installType} with parameters:`, parameters);
       
       // Add additional parameters based on installation type
@@ -326,7 +304,13 @@ const NewJob: React.FC = () => {
       console.error('Failed to submit job:', error);
       
       // Extract error details from response if available
-      const errorDetail = error.response?.data?.detail || 'Failed to submit installation job. Please try again.';
+      let errorDetail = error.response?.data?.detail || 'Failed to submit installation job. Please try again.';
+      
+      // Format error detail if it's an array
+      if (Array.isArray(errorDetail)) {
+        errorDetail = errorDetail.map(err => err.msg || err).join(', ');
+      }
+      
       setError(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
     } finally {
       setLoading(false);
@@ -345,27 +329,16 @@ const NewJob: React.FC = () => {
           rules={[{ required: true, message: 'Please select a host' }]}
           hidden={true} // Hide this since we already selected the host
         >
-          <Select 
-            placeholder="Select host for installation" 
-            loading={hostsLoading}
-            showSearch
-            optionFilterProp="children"
-            disabled={true}
-          >
-            {hosts.map(host => (
-              <Option key={host.id} value={host.id}>
-                {host.hostname} ({host.ip_address})
-              </Option>
-            ))}
-          </Select>
+          <Input type="hidden" />
         </Form.Item>
         
         {!installType.includes('custom_command') && !installType.includes('bash_script') && (
           <Form.Item
             name="install_dir"
             label="Installation Directory"
+            rules={[{ required: true, message: 'Please specify installation directory' }]}
           >
-            <Input placeholder="/opt" />
+            <Input placeholder="/opt" prefix={<FolderOutlined />} />
           </Form.Item>
         )}
 
@@ -401,16 +374,22 @@ const NewJob: React.FC = () => {
             <>
               <Form.Item
                 name="deployment_server"
-                label="Deployment Server"
-                tooltip="Optional: Splunk Deployment Server for UF configuration"
+                label={
+                  <Tooltip title="Optional: Splunk Deployment Server for UF configuration">
+                    Deployment Server
+                  </Tooltip>
+                }
               >
                 <Input placeholder="deployserver:8089" />
               </Form.Item>
               
               <Form.Item
                 name="deployment_app"
-                label="Deployment App"
-                tooltip="Optional: Deployment app name for UF configuration"
+                label={
+                  <Tooltip title="Optional: Deployment app name for UF configuration">
+                    Deployment App
+                  </Tooltip>
+                }
               >
                 <Input placeholder="deployment-apps/uf-config" />
               </Form.Item>
@@ -437,8 +416,11 @@ const NewJob: React.FC = () => {
               
               <Form.Item
                 name="license_master"
-                label="License Master"
-                tooltip="Optional: Splunk License Master"
+                label={
+                  <Tooltip title="Optional: Splunk License Master">
+                    License Master
+                  </Tooltip>
+                }
               >
                 <Input placeholder="license-master:8089" />
               </Form.Item>
@@ -542,9 +524,12 @@ const NewJob: React.FC = () => {
             
             <Form.Item
               name="is_dry_run"
-              label="Dry Run"
+              label={
+                <Tooltip title="Simulate the installation without actually installing anything">
+                  Dry Run
+                </Tooltip>
+              }
               valuePropName="checked"
-              tooltip="Simulate the installation without actually installing anything"
             >
               <Switch />
             </Form.Item>
@@ -845,7 +830,7 @@ const NewJob: React.FC = () => {
         onCancel={handleModalClose}
         width={800}
         footer={null}
-        destroyOnHidden
+        destroyOnClose={true}
       >
         <div className="install-modal-content">
           <Steps current={currentStep} style={{ marginBottom: 24 }}>
@@ -857,7 +842,6 @@ const NewJob: React.FC = () => {
           <Form
             form={form}
             layout="vertical"
-            initialValues={{ is_dry_run: false }}
           >
             {renderStepContent()}
           </Form>
