@@ -1,102 +1,209 @@
-NewJob.tsx:152 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
-NewJob.tsx:159 Form initialized with host_id: 1
-antd.js?v=bb3d12d1:1638 Warning: Form already set 'initialValues' with path 'host_id'. Field can not overwrite it.
-NewJob.tsx:226 Form values after setting splunk_uf defaults: 
-{host_id: 1, install_type: 'splunk_uf'}
-NewJob.tsx:243 Warning: Warning: There may be circular references
-NewJob.tsx:401 Warning: React has detected a change in the order of Hooks called by NewJob. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
-
-   Previous render            Next render
-   ------------------------------------------------------
-1. useState                   useState
-2. useState                   useState
-3. useState                   useState
-4. useState                   useState
-5. useRef                     useRef
-6. useState                   useState
-7. useRef                     useRef
-8. useMemo                    useMemo
-9. useState                   useState
-10. useState                  useState
-11. useState                  useState
-12. useState                  useState
-13. useState                  useState
-14. useState                  useState
-15. useState                  useState
-16. useContext                useContext
-17. useContext                useContext
-18. useContext                useContext
-19. useContext                useContext
-20. useContext                useContext
-21. useContext                useContext
-22. useContext                useContext
-23. useRef                    useRef
-24. useContext                useContext
-25. useLayoutEffect           useLayoutEffect
-26. useCallback               useCallback
-27. useEffect                 useEffect
-28. undefined                 useEffect
-   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    at NewJob (http://192.168.100.45:8500/src/pages/NewJob.tsx:106:51)
-    at main
-    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69558:16
-    at Content
-    at div
-    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
-    at Layout
-    at div
-    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
-    at Layout
-    at AppLayout (http://192.168.100.45:8500/src/components/Layout.tsx:46:22)
-    at RequireAuth (http://192.168.100.45:8500/src/services/authContext.tsx:128:31)
-    at RenderedRoute (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4103:5)
-    at Routes (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4574:5)
-    at AuthProvider (http://192.168.100.45:8500/src/services/authContext.tsx:31:32)
-    at MotionWrapper (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8313:32)
-    at ProviderChildren (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8425:5)
-    at ConfigProvider (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8714:27)
-    at App (http://192.168.100.45:8500/src/App.tsx:34:35)
-    at QueryClientProvider (http://192.168.100.45:8500/node_modules/.vite/deps/@tanstack_react-query.js?v=78dcaac7:2839:3)
-    at Router (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4517:15)
-    at BrowserRouter (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:5266:5)
-
-chunk-V5LT2MCF.js?v=69237fbf:11698 Uncaught Error: Rendered more hooks than during the previous render.
-    at getInstallationFormFields (NewJob.tsx:401:5)
-    at renderStepContent (NewJob.tsx:621:14)
-    at NewJob (NewJob.tsx:997:14)
-chunk-V5LT2MCF.js?v=69237fbf:11698 Uncaught Error: Rendered more hooks than during the previous render.
-    at getInstallationFormFields (NewJob.tsx:401:5)
-    at renderStepContent (NewJob.tsx:621:14)
-    at NewJob (NewJob.tsx:997:14)
-chunk-V5LT2MCF.js?v=69237fbf:14052 The above error occurred in the <NewJob> component:
-
-    at NewJob (http://192.168.100.45:8500/src/pages/NewJob.tsx:106:51)
-    at main
-    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69558:16
-    at Content
-    at div
-    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
-    at Layout
-    at div
-    at http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:69577:16
-    at Layout
-    at AppLayout (http://192.168.100.45:8500/src/components/Layout.tsx:46:22)
-    at RequireAuth (http://192.168.100.45:8500/src/services/authContext.tsx:128:31)
-    at RenderedRoute (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4103:5)
-    at Routes (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4574:5)
-    at AuthProvider (http://192.168.100.45:8500/src/services/authContext.tsx:31:32)
-    at MotionWrapper (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8313:32)
-    at ProviderChildren (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8425:5)
-    at ConfigProvider (http://192.168.100.45:8500/node_modules/.vite/deps/antd.js?v=bb3d12d1:8714:27)
-    at App (http://192.168.100.45:8500/src/App.tsx:34:35)
-    at QueryClientProvider (http://192.168.100.45:8500/node_modules/.vite/deps/@tanstack_react-query.js?v=78dcaac7:2839:3)
-    at Router (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:4517:15)
-    at BrowserRouter (http://192.168.100.45:8500/node_modules/.vite/deps/react-router-dom.js?v=c131e2cd:5266:5)
-
-Consider adding an error boundary to your tree to customize error handling behavior.
-Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
-chunk-V5LT2MCF.js?v=69237fbf:11698 Uncaught Error: Rendered more hooks than during the previous render.
-    at getInstallationFormFields (NewJob.tsx:401:5)
-    at renderStepContent (NewJob.tsx:621:14)
-    at NewJob (NewJob.tsx:997:14)
+NewJob.tsx:168 Warning: Instance created by `useForm` is not connected to any Form element. Forget to pass `form` prop?
+warning @ antd.js?v=10a90ebc:1638
+call @ antd.js?v=10a90ebc:1657
+warningOnce @ antd.js?v=10a90ebc:1662
+(anonymous) @ antd.js?v=10a90ebc:19880
+setTimeout
+(anonymous) @ antd.js?v=10a90ebc:19877
+(anonymous) @ antd.js?v=10a90ebc:20129
+handleHostSelect @ NewJob.tsx:168
+onClick @ NewJob.tsx:817
+callCallback2 @ chunk-V5LT2MCF.js?v=10a90ebc:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=10a90ebc:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=10a90ebc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=10a90ebc:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=10a90ebc:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=10a90ebc:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=10a90ebc:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=10a90ebc:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=10a90ebc:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=10a90ebc:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=10a90ebc:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=10a90ebc:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5449
+NewJob.tsx:175 Form initialized with host_id: 1
+antd.js?v=10a90ebc:1638 Warning: Form already set 'initialValues' with path 'host_id'. Field can not overwrite it.
+warning @ antd.js?v=10a90ebc:1638
+call @ antd.js?v=10a90ebc:1657
+warningOnce @ antd.js?v=10a90ebc:1662
+(anonymous) @ antd.js?v=10a90ebc:20093
+resetWithFields2 @ antd.js?v=10a90ebc:20087
+(anonymous) @ antd.js?v=10a90ebc:20126
+(anonymous) @ antd.js?v=10a90ebc:20207
+componentDidMount @ antd.js?v=10a90ebc:19460
+commitLayoutEffectOnFiber @ chunk-V5LT2MCF.js?v=10a90ebc:17052
+commitLayoutMountEffects_complete @ chunk-V5LT2MCF.js?v=10a90ebc:18008
+commitLayoutEffects_begin @ chunk-V5LT2MCF.js?v=10a90ebc:17997
+commitLayoutEffects @ chunk-V5LT2MCF.js?v=10a90ebc:17948
+commitRootImpl @ chunk-V5LT2MCF.js?v=10a90ebc:19381
+commitRoot @ chunk-V5LT2MCF.js?v=10a90ebc:19305
+finishConcurrentRender @ chunk-V5LT2MCF.js?v=10a90ebc:18833
+performConcurrentWorkOnRoot @ chunk-V5LT2MCF.js?v=10a90ebc:18746
+workLoop @ chunk-V5LT2MCF.js?v=10a90ebc:197
+flushWork @ chunk-V5LT2MCF.js?v=10a90ebc:176
+performWorkUntilDeadline @ chunk-V5LT2MCF.js?v=10a90ebc:384
+NewJob.tsx:242 Form values after setting splunk_uf defaults: {host_id: 1, install_type: 'splunk_uf'}
+NewJob.tsx:142 Form values set in useEffect: {host_id: 1, install_type: 'splunk_uf'}
+NewJob.tsx:259 Warning: Warning: There may be circular references
+warning @ antd.js?v=10a90ebc:1638
+call @ antd.js?v=10a90ebc:1657
+warningOnce @ antd.js?v=10a90ebc:1662
+deepEqual @ antd.js?v=10a90ebc:2918
+(anonymous) @ antd.js?v=10a90ebc:2947
+deepEqual @ antd.js?v=10a90ebc:2946
+isEqual @ antd.js?v=10a90ebc:2952
+(anonymous) @ antd.js?v=10a90ebc:19131
+(anonymous) @ antd.js?v=10a90ebc:19191
+(anonymous) @ antd.js?v=10a90ebc:20264
+(anonymous) @ antd.js?v=10a90ebc:20262
+(anonymous) @ antd.js?v=10a90ebc:20164
+(anonymous) @ antd.js?v=10a90ebc:20157
+(anonymous) @ antd.js?v=10a90ebc:20312
+handleNext @ NewJob.tsx:259
+(anonymous) @ antd.js?v=10a90ebc:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=10a90ebc:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=10a90ebc:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=10a90ebc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=10a90ebc:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=10a90ebc:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=10a90ebc:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=10a90ebc:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=10a90ebc:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=10a90ebc:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=10a90ebc:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=10a90ebc:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=10a90ebc:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5449
+antd.js?v=10a90ebc:1638 Warning: [antd: Form.Item] `defaultValue` will not work on controlled Field. You should use `initialValues` of Form instead.
+warning @ antd.js?v=10a90ebc:1638
+call @ antd.js?v=10a90ebc:1657
+warningOnce @ antd.js?v=10a90ebc:1662
+warning2 @ antd.js?v=10a90ebc:4759
+typeWarning @ antd.js?v=10a90ebc:4785
+(anonymous) @ antd.js?v=10a90ebc:66449
+(anonymous) @ antd.js?v=10a90ebc:19359
+render2 @ antd.js?v=10a90ebc:19485
+finishClassComponent @ chunk-V5LT2MCF.js?v=10a90ebc:14719
+updateClassComponent @ chunk-V5LT2MCF.js?v=10a90ebc:14684
+beginWork @ chunk-V5LT2MCF.js?v=10a90ebc:15950
+beginWork$1 @ chunk-V5LT2MCF.js?v=10a90ebc:19781
+performUnitOfWork @ chunk-V5LT2MCF.js?v=10a90ebc:19226
+workLoopSync @ chunk-V5LT2MCF.js?v=10a90ebc:19165
+renderRootSync @ chunk-V5LT2MCF.js?v=10a90ebc:19144
+performSyncWorkOnRoot @ chunk-V5LT2MCF.js?v=10a90ebc:18902
+flushSyncCallbacks @ chunk-V5LT2MCF.js?v=10a90ebc:9135
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:18655
+antd.js?v=10a90ebc:1638 Warning: Form already set 'initialValues' with path 'version'. Field can not overwrite it.
+warning @ antd.js?v=10a90ebc:1638
+call @ antd.js?v=10a90ebc:1657
+warningOnce @ antd.js?v=10a90ebc:1662
+(anonymous) @ antd.js?v=10a90ebc:20093
+resetWithFields2 @ antd.js?v=10a90ebc:20087
+(anonymous) @ antd.js?v=10a90ebc:20126
+(anonymous) @ antd.js?v=10a90ebc:20207
+componentDidMount @ antd.js?v=10a90ebc:19460
+commitLayoutEffectOnFiber @ chunk-V5LT2MCF.js?v=10a90ebc:17052
+commitLayoutMountEffects_complete @ chunk-V5LT2MCF.js?v=10a90ebc:18008
+commitLayoutEffects_begin @ chunk-V5LT2MCF.js?v=10a90ebc:17997
+commitLayoutEffects @ chunk-V5LT2MCF.js?v=10a90ebc:17948
+commitRootImpl @ chunk-V5LT2MCF.js?v=10a90ebc:19381
+commitRoot @ chunk-V5LT2MCF.js?v=10a90ebc:19305
+performSyncWorkOnRoot @ chunk-V5LT2MCF.js?v=10a90ebc:18923
+flushSyncCallbacks @ chunk-V5LT2MCF.js?v=10a90ebc:9135
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:18655
+antd.js?v=10a90ebc:1638 Warning: Form already set 'initialValues' with path 'admin_password'. Field can not overwrite it.
+warning @ antd.js?v=10a90ebc:1638
+call @ antd.js?v=10a90ebc:1657
+warningOnce @ antd.js?v=10a90ebc:1662
+(anonymous) @ antd.js?v=10a90ebc:20093
+resetWithFields2 @ antd.js?v=10a90ebc:20087
+(anonymous) @ antd.js?v=10a90ebc:20126
+(anonymous) @ antd.js?v=10a90ebc:20207
+componentDidMount @ antd.js?v=10a90ebc:19460
+commitLayoutEffectOnFiber @ chunk-V5LT2MCF.js?v=10a90ebc:17052
+commitLayoutMountEffects_complete @ chunk-V5LT2MCF.js?v=10a90ebc:18008
+commitLayoutEffects_begin @ chunk-V5LT2MCF.js?v=10a90ebc:17997
+commitLayoutEffects @ chunk-V5LT2MCF.js?v=10a90ebc:17948
+commitRootImpl @ chunk-V5LT2MCF.js?v=10a90ebc:19381
+commitRoot @ chunk-V5LT2MCF.js?v=10a90ebc:19305
+performSyncWorkOnRoot @ chunk-V5LT2MCF.js?v=10a90ebc:18923
+flushSyncCallbacks @ chunk-V5LT2MCF.js?v=10a90ebc:9135
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:18655
+NewJob.tsx:313 Current form values before validation: {host_id: 1, version: '9.4.3', admin_password: 'changeme', run_user: 'splunk', install_dir: '/opt', …}
+NewJob.tsx:320 Form values on submit: {host_id: 1, version: '9.4.3', admin_password: 'changeme', run_user: 'splunk', install_dir: '/opt', …}
+api.ts:229 Installing Splunk UF with parameters: {hostId: 1, parameters: {…}, isDryRun: false}
+api.ts:232 
+            
+            
+           POST http://192.168.100.45:5050/jobs/install/splunk-uf?host_id=1&is_dry_run=false 422 (Unprocessable Entity)
+dispatchXhrRequest @ axios.js?v=10a90ebc:1662
+xhr @ axios.js?v=10a90ebc:1542
+dispatchRequest @ axios.js?v=10a90ebc:2017
+Promise.then
+_request @ axios.js?v=10a90ebc:2220
+request @ axios.js?v=10a90ebc:2129
+httpMethod @ axios.js?v=10a90ebc:2267
+wrap @ axios.js?v=10a90ebc:8
+installSplunkUF @ api.ts:232
+handleSubmit @ NewJob.tsx:331
+await in handleSubmit
+(anonymous) @ antd.js?v=10a90ebc:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=10a90ebc:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=10a90ebc:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=10a90ebc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=10a90ebc:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=10a90ebc:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=10a90ebc:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=10a90ebc:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=10a90ebc:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=10a90ebc:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=10a90ebc:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=10a90ebc:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=10a90ebc:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5449
+api.ts:240 Splunk UF installation error details: {detail: "Missing required parameters: user. Received: {'hos…me', 'run_user': 'splunk', 'install_dir': '/opt'}"}
+installSplunkUF @ api.ts:240
+await in installSplunkUF
+handleSubmit @ NewJob.tsx:331
+await in handleSubmit
+(anonymous) @ antd.js?v=10a90ebc:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=10a90ebc:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=10a90ebc:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=10a90ebc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=10a90ebc:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=10a90ebc:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=10a90ebc:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=10a90ebc:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=10a90ebc:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=10a90ebc:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=10a90ebc:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=10a90ebc:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=10a90ebc:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5449
+NewJob.tsx:368 Failed to submit job: AxiosError {message: 'Request failed with status code 422', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+handleSubmit @ NewJob.tsx:368
+await in handleSubmit
+(anonymous) @ antd.js?v=10a90ebc:16539
+callCallback2 @ chunk-V5LT2MCF.js?v=10a90ebc:3674
+invokeGuardedCallbackDev @ chunk-V5LT2MCF.js?v=10a90ebc:3699
+invokeGuardedCallback @ chunk-V5LT2MCF.js?v=10a90ebc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-V5LT2MCF.js?v=10a90ebc:3736
+executeDispatch @ chunk-V5LT2MCF.js?v=10a90ebc:7016
+processDispatchQueueItemsInOrder @ chunk-V5LT2MCF.js?v=10a90ebc:7036
+processDispatchQueue @ chunk-V5LT2MCF.js?v=10a90ebc:7045
+dispatchEventsForPlugins @ chunk-V5LT2MCF.js?v=10a90ebc:7053
+(anonymous) @ chunk-V5LT2MCF.js?v=10a90ebc:7177
+batchedUpdates$1 @ chunk-V5LT2MCF.js?v=10a90ebc:18941
+batchedUpdates @ chunk-V5LT2MCF.js?v=10a90ebc:3579
+dispatchEventForPluginEventSystem @ chunk-V5LT2MCF.js?v=10a90ebc:7176
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-V5LT2MCF.js?v=10a90ebc:5478
+dispatchEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5472
+dispatchDiscreteEvent @ chunk-V5LT2MCF.js?v=10a90ebc:5449

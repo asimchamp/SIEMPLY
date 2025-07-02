@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Modal, 
   Form, 
@@ -43,6 +43,9 @@ const InstallModal: React.FC<InstallModalProps> = ({ visible, onClose, onSuccess
   const [installType, setInstallType] = useState<string>('');
   const [jobId, setJobId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  
+  // Ref to prevent duplicate submissions (especially in React Strict Mode)
+  const isSubmittingRef = useRef<boolean>(false);
 
   // Installation types
   const INSTALLATION_TYPES = [
@@ -114,7 +117,14 @@ const InstallModal: React.FC<InstallModalProps> = ({ visible, onClose, onSuccess
 
   // Handle form submission
   const handleSubmit = async () => {
+    // Prevent duplicate submissions (especially important for React Strict Mode)
+    if (loading || isSubmittingRef.current) {
+      console.log("Submission already in progress, ignoring duplicate call");
+      return;
+    }
+    
     try {
+      isSubmittingRef.current = true;
       setLoading(true);
       setError(null);
       
@@ -171,6 +181,7 @@ const InstallModal: React.FC<InstallModalProps> = ({ visible, onClose, onSuccess
       setError('Failed to submit installation job. Please try again.');
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

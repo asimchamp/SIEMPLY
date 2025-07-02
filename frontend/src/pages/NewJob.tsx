@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Typography, 
   Card, 
@@ -37,7 +37,7 @@ import { useNavigate } from 'react-router-dom';
 // We'll handle the framer-motion import with a dynamic import to avoid build errors
 // if the package isn't installed yet
 // import { motion } from 'framer-motion';
-import { hostService, jobService, splunkService, Host } from '../services/api';
+import { hostService, jobService, packageService, Host, SoftwarePackage } from '../services/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -67,8 +67,7 @@ const INSTALLATION_TYPES: Record<InstallCategory, InstallTypeOption[]> = {
   ],
   [InstallCategory.SPLUNK]: [
     { value: 'splunk_uf', label: 'Universal Forwarder' },
-    { value: 'splunk_enterprise', label: 'Enterprise' },
-    { value: 'splunk_heavy_forwarder', label: 'Heavy Forwarder' }
+    { value: 'splunk_enterprise', label: 'Enterprise' }
   ],
   [InstallCategory.CRIBL]: [
     { value: 'cribl_leader', label: 'Stream Leader' },
@@ -81,10 +80,7 @@ const INSTALLATION_TYPES: Record<InstallCategory, InstallTypeOption[]> = {
   ]
 };
 
-// Splunk versions
-const SPLUNK_VERSIONS = ['9.4.3', '9.1.1', '9.0.5', '8.2.9', '8.1.5'];
-
-// Cribl versions
+// Cribl versions (will be replaced with Package Inventory data later)
 const CRIBL_VERSIONS = ['3.4.1', '3.3.0', '3.0.5', '2.4.5'];
 
 // Animation variants for cards
@@ -120,29 +116,85 @@ const NewJob: React.FC = () => {
   const [hostsLoading, setHostsLoading] = useState<boolean>(true);
   const [jobId, setJobId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [directInstallResult, setDirectInstallResult] = useState<Record<string, any> | null>(null);
+  const [packages, setPackages] = useState<SoftwarePackage[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState<boolean>(false);
+  
+  // Ref to prevent duplicate submissions (especially in React Strict Mode)
+  const isSubmittingRef = useRef<boolean>(false);
+
   const navigate = useNavigate();
 
-  // Fetch hosts when component mounts
+  // Fetch hosts and packages when component mounts
   useEffect(() => {
     fetchHosts();
+    fetchPackages();
   }, []);
+
+  // Fetch available packages from Package Inventory
+  const fetchPackages = async (): Promise<void> => {
+    try {
+      setPackagesLoading(true);
+      const packagesData = await packageService.getAllPackages();
+      setPackages(packagesData);
+    } catch (error) {
+      console.error('Failed to fetch packages:', error);
+      message.error('Failed to load package inventory');
+    } finally {
+      setPackagesLoading(false);
+    }
+  };
+
+  // Get available versions for a package type
+  const getAvailableVersions = (packageType: string): string[] => {
+    return packages
+      .filter(pkg => pkg.package_type === packageType && pkg.status === 'active')
+      .map(pkg => pkg.version)
+      .filter((version, index, self) => self.indexOf(version) === index) // Remove duplicates
+      .sort((a, b) => b.localeCompare(a)); // Sort descending
+  };
+
+  // Get available architectures for a package type and version
+  const getAvailableArchitectures = (packageType: string, version: string): string[] => {
+    const pkg = packages.find(p => p.package_type === packageType && p.version === version);
+    if (!pkg || !pkg.downloads || pkg.downloads.length === 0) {
+      // Fallback to legacy architecture field
+      return pkg?.architecture ? [pkg.architecture] : ['x86_64'];
+    }
+    return pkg.downloads.map(d => d.architecture);
+  };
 
   // Set default values for the current installation type
   useEffect(() => {
-    if (installType && form) {
+    if (installType && form && packages.length > 0) {
       if (installType.includes('splunk')) {
+        const packageType = installType === 'splunk_uf' ? 'splunk_uf' : 'splunk_enterprise';
+        const availableVersions = getAvailableVersions(packageType);
+        const defaultVersion = availableVersions[0]; // Get latest version
+        
         // Set default values for Splunk installations
-        form.setFieldsValue({
-          version: '9.4.3',
+        const defaultValues = {
           run_user: 'splunk',
-          install_dir: installType === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk',
+          install_dir: installType === 'splunk_uf' ? '/opt' : '/opt/splunk',
           admin_password: 'changeme'
-        });
+        };
+
+        if (defaultVersion) {
+          const availableArchs = getAvailableArchitectures(packageType, defaultVersion);
+          const defaultArch = availableArchs.includes('x86_64') ? 'x86_64' : availableArchs[0];
+          
+          form.setFieldsValue({
+            ...defaultValues,
+            version: defaultVersion,
+            architecture: defaultArch
+          });
+        } else {
+          form.setFieldsValue(defaultValues);
+        }
+        
         console.log("Form values set in useEffect:", form.getFieldsValue());
       }
     }
-  }, [installType, form]);
+  }, [installType, form, packages]);
 
   // Fetch available hosts
   const fetchHosts = async (): Promise<void> => {
@@ -221,7 +273,7 @@ const NewJob: React.FC = () => {
     if (type.includes('splunk')) {
       formValues.version = '9.4.3';
       formValues.run_user = 'splunk';
-      formValues.install_dir = type === 'splunk_uf' ? '/opt/splunkforwarder' : '/opt/splunk';
+      formValues.install_dir = type === 'splunk_uf' ? '/opt' : '/opt/splunk';
       formValues.admin_password = 'changeme';
     } else if (type.includes('cribl')) {
       formValues.version = '3.4.1';
@@ -280,7 +332,14 @@ const NewJob: React.FC = () => {
 
   // Handle form submission
   const handleSubmit = async (): Promise<void> => {
+    // Prevent duplicate submissions (especially important for React Strict Mode)
+    if (loading || isSubmittingRef.current) {
+      console.log("Submission already in progress, ignoring duplicate call");
+      return;
+    }
+    
     try {
+      isSubmittingRef.current = true;
       setLoading(true);
       setError(null);
       
@@ -298,7 +357,7 @@ const NewJob: React.FC = () => {
       if (installType === 'splunk_uf') {
         defaultValues['version'] = '9.4.3';
         defaultValues['admin_password'] = 'changeme';
-        defaultValues['install_dir'] = '/opt/splunkforwarder';
+        defaultValues['install_dir'] = '/opt';
         defaultValues['run_user'] = 'splunk';
       }
       
@@ -324,69 +383,88 @@ const NewJob: React.FC = () => {
       
       // Submit job based on installation type
       let job;
-      let result;
-      let isDirectInstall = false;
       
       switch (installType) {
         case 'splunk_uf':
-          // Use direct installation for Splunk UF
-          isDirectInstall = true;
-          
-          // Create parameters object with explicit defaults
+          // Transform form values to match backend API expectations
           const splunkUFParams = {
-            version: values.version || '9.4.3',
-            install_dir: values.install_dir || '/opt/splunkforwarder',
-            admin_password: values.admin_password || 'changeme',
-            user: values.run_user || 'splunk',
-            group: values.run_user || 'splunk',
-            deployment_server: values.deployment_server,
-            deployment_app: values.deployment_app,
-            is_dry_run: values.is_dry_run || false
+            ...values,
+            user: values.run_user, // Backend expects 'user', form sends 'run_user'
           };
+          delete splunkUFParams.run_user; // Remove the original field
           
-          console.log("Installing Splunk UF with validated parameters:", splunkUFParams);
-          
-          result = await splunkService.installSplunkUF(host_id, splunkUFParams);
-          
-          // Set job ID for consistency in UI
-          setJobId(`direct-splunk-uf-${Date.now()}`);
-          setDirectInstallResult(result);
+          // Use job service for Splunk UF to ensure it appears in Job History
+          job = await jobService.installSplunkUF(host_id, splunkUFParams, values.is_dry_run || false);
+          setJobId(job.job_id);
           break;
           
         case 'splunk_enterprise':
-          job = await jobService.installSplunkEnterprise(host_id, values, values.is_dry_run || false);
+          // Transform form values to match backend API expectations
+          const splunkEntParams = {
+            ...values,
+            user: values.run_user, // Backend expects 'user', form sends 'run_user'
+          };
+          delete splunkEntParams.run_user; // Remove the original field
+          
+          job = await jobService.installSplunkEnterprise(host_id, splunkEntParams, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         case 'cribl_leader':
-          job = await jobService.installCriblLeader(host_id, values, values.is_dry_run || false);
+          // Transform form values to match backend API expectations
+          const criblLeaderParams = {
+            ...values,
+            user: values.run_user, // Backend expects 'user', form sends 'run_user'
+          };
+          delete criblLeaderParams.run_user; // Remove the original field
+          
+          job = await jobService.installCriblLeader(host_id, criblLeaderParams, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         case 'cribl_worker':
-          job = await jobService.installCriblWorker(host_id, values, values.is_dry_run || false);
+          // Transform form values to match backend API expectations
+          const criblWorkerParams = {
+            ...values,
+            user: values.run_user, // Backend expects 'user', form sends 'run_user'
+          };
+          delete criblWorkerParams.run_user; // Remove the original field
+          
+          job = await jobService.installCriblWorker(host_id, criblWorkerParams, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         case 'custom_command':
         case 'bash_script':
+          // Transform form values to match backend API expectations
+          const customParams = {
+            ...values,
+            user: values.run_user, // Backend expects 'user', form sends 'run_user'
+          };
+          delete customParams.run_user; // Remove the original field
+          
           // Use a generic job submission for user commands
-          job = await jobService.submitCustomJob(host_id, installType, values, values.is_dry_run || false);
+          job = await jobService.submitCustomJob(host_id, installType, customParams, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
           
         default:
+          // Transform form values to match backend API expectations
+          const defaultParams = {
+            ...values,
+            user: values.run_user, // Backend expects 'user', form sends 'run_user'
+          };
+          delete defaultParams.run_user; // Remove the original field
+          
           // For other types
-          job = await jobService.installSplunkUF(host_id, values, values.is_dry_run || false);
+          job = await jobService.installSplunkUF(host_id, defaultParams, values.is_dry_run || false);
           setJobId(job.job_id);
           break;
       }
       
       // Move to next step
       setCurrentStep(currentStep + 1);
-      message.success(isDirectInstall 
-        ? 'Installation completed directly via SSH' 
-        : 'Job submitted successfully');
+      message.success('Job submitted successfully');
     } catch (error: any) {
       console.error('Failed to submit job:', error);
       
@@ -401,6 +479,7 @@ const NewJob: React.FC = () => {
       setError(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -449,13 +528,44 @@ const NewJob: React.FC = () => {
           <Form.Item
             name="version"
             label="Splunk Version"
-            initialValue="9.4.3"
             rules={[{ required: true, message: 'Please select a version' }]}
           >
-            <Select placeholder="Select Splunk version" defaultValue="9.4.3">
-              {SPLUNK_VERSIONS.map(version => (
+            <Select 
+              placeholder="Select Splunk version" 
+              loading={packagesLoading}
+              onChange={(_value: string) => {
+                // Reset architecture when version changes
+                form.setFieldsValue({ architecture: undefined });
+              }}
+            >
+              {getAvailableVersions(installType === 'splunk_uf' ? 'splunk_uf' : 'splunk_enterprise').map((version: string) => (
                 <Option key={version} value={version}>{version}</Option>
               ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="architecture"
+            label="Architecture"
+            rules={[{ required: true, message: 'Please select an architecture' }]}
+          >
+            <Select 
+              placeholder="Select architecture"
+              disabled={!form.getFieldValue('version')}
+            >
+              {form.getFieldValue('version') && 
+                getAvailableArchitectures(
+                  installType === 'splunk_uf' ? 'splunk_uf' : 'splunk_enterprise', 
+                  form.getFieldValue('version')
+                ).map((arch: string) => (
+                  <Option key={arch} value={arch}>
+                    {arch === 'x86_64' ? 'x86_64 (Intel/AMD)' : 
+                     arch === 'arm64' ? 'ARM64' : 
+                     arch === 'aarch64' ? 'AArch64' : 
+                     arch}
+                  </Option>
+                ))
+              }
             </Select>
           </Form.Item>
           
@@ -727,59 +837,40 @@ const NewJob: React.FC = () => {
           );
         }
         
-        // Check if this was a direct installation
-        const isDirectInstall = directInstallResult !== null;
-        
         return (
           <Result
             status="success"
-            title={isDirectInstall ? "Installation Completed" : "Installation Job Started"}
-            subTitle={isDirectInstall 
-              ? `Installed on ${selectedHost?.hostname} (${selectedHost?.ip_address})` 
-              : `Job ID: ${jobId}`}
+            title="Installation Job Started"
+            subTitle={`Job ID: ${jobId}`}
             extra={[
-              <Button key="view" type="primary" onClick={() => navigate(isDirectInstall ? '/hosts' : '/jobs')}>
-                {isDirectInstall ? 'View Hosts' : 'View in Job History'}
+              <Button key="view" type="primary" onClick={() => navigate('/jobs')}>
+                View in Job History
               </Button>,
               <Button key="new" onClick={handleModalClose}>
                 New Installation
               </Button>,
             ]}
           >
-            {isDirectInstall && directInstallResult && (
               <div style={{ textAlign: 'left', marginTop: 20 }}>
                 <Divider />
-                <Title level={5}>Installation Details</Title>
-                {directInstallResult.success ? (
-                  <>
+              <Title level={5}>Job Details</Title>
                     <div>
-                      <Text strong>Status:</Text> <Tag color="green">Success</Tag>
+                <Text strong>Host:</Text> {selectedHost?.hostname} ({selectedHost?.ip_address})
                     </div>
                     <div>
-                      <Text strong>Message:</Text> {directInstallResult.message}
+                <Text strong>Installation Type:</Text> {installType?.replace(/_/g, ' ').toUpperCase()}
                     </div>
-                    {directInstallResult.is_dry_run && (
+              <div>
+                <Text strong>Status:</Text> <Tag color="blue">Job Submitted</Tag>
+              </div>
                       <Alert
-                        message="Dry Run Mode"
-                        description="This was a simulation. No actual changes were made."
-                        type="warning"
+                message="Job Started"
+                description="Your installation job has been submitted and is running in the background. You can monitor its progress in the Job History page."
+                type="info"
                         showIcon
                         style={{ marginTop: 16 }}
                       />
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <Text strong>Status:</Text> <Tag color="red">Failed</Tag>
                     </div>
-                    <div>
-                      <Text strong>Error:</Text> {directInstallResult.message}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
           </Result>
         );
       
@@ -987,7 +1078,7 @@ const NewJob: React.FC = () => {
               version: installType?.includes('splunk') ? '9.4.3' : undefined,
               admin_password: installType?.includes('splunk') ? 'changeme' : undefined,
               run_user: installType?.includes('splunk') ? 'splunk' : 'root',
-              install_dir: installType === 'splunk_uf' ? '/opt/splunkforwarder' : 
+              install_dir: installType === 'splunk_uf' ? '/opt' : 
                            installType?.includes('splunk') ? '/opt/splunk' : 
                            installType?.includes('cribl') ? '/opt/cribl' : '/opt'
             }}

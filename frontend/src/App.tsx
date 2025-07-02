@@ -12,6 +12,8 @@ import Register from './pages/Register'
 import ChangePassword from './pages/ChangePassword'
 import NotFound from './pages/NotFound'
 import NewJob from './pages/NewJob'
+import Database from './pages/Database'
+import Users from './pages/Users'
 import { AuthProvider, RequireAuth } from './services/authContext'
 
 function App() {
@@ -66,6 +68,23 @@ function App() {
             <RequireAuth>
               <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
                 <NewJob />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/database" element={
+            <Navigate to="/database/packages" replace />
+          } />
+          <Route path="/database/packages" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <Database />
+              </Layout>
+            </RequireAuth>
+          } />
+          <Route path="/database/users" element={
+            <RequireAuth>
+              <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+                <Users />
               </Layout>
             </RequireAuth>
           } />

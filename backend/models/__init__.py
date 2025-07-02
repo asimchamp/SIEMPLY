@@ -6,6 +6,7 @@ from .host import Host, HostCreate, HostUpdate, HostResponse, HostRole
 from .job import Job, JobCreate, JobUpdate, JobResponse, JobType, JobStatus
 from .user import User
 from .scheduler import ScheduledTask, TaskExecution, ScheduleType, TaskType
+from .package import SoftwarePackage, PackageCreate, PackageUpdate, PackageResponse, PackageType, PackageStatus
 
 __all__ = [
     "Base",
@@ -27,4 +28,10 @@ __all__ = [
     "TaskExecution",
     "ScheduleType",
     "TaskType",
+    "SoftwarePackage",
+    "PackageCreate",
+    "PackageUpdate",
+    "PackageResponse",
+    "PackageType",
+    "PackageStatus",
 ] 

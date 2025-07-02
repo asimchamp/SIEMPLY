@@ -22,7 +22,8 @@ import {
   LockOutlined,
   AppstoreOutlined,
   PlusOutlined,
-  CloudDownloadOutlined
+  CloudDownloadOutlined,
+  DatabaseOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../services/authContext';
 import type { MenuProps } from 'antd';
@@ -47,7 +48,7 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
     logout();
   };
 
-  // Define menu items with submenu for Jobs
+  // Define menu items with submenu for Jobs and Database
   const menuItems: MenuProps['items'] = [
     {
       key: '/dashboard',
@@ -73,6 +74,23 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
           key: '/jobs',
           icon: <HistoryOutlined />,
           label: 'Job History',
+        },
+      ],
+    },
+    {
+      key: 'database',
+      icon: <DatabaseOutlined />,
+      label: 'Database',
+      children: [
+        {
+          key: '/database/packages',
+          icon: <AppstoreOutlined />,
+          label: 'Software Package Database',
+        },
+        {
+          key: '/database/users',
+          icon: <UserOutlined />,
+          label: 'Users',
         },
       ],
     },
@@ -111,6 +129,9 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
   const getOpenKeys = () => {
     if (location.pathname.startsWith('/jobs')) {
       return ['jobs'];
+    }
+    if (location.pathname.startsWith('/database')) {
+      return ['database'];
     }
     return [];
   };

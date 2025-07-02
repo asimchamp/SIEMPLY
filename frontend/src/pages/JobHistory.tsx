@@ -128,7 +128,12 @@ const JobHistory: React.FC = () => {
   };
 
   // Helper function to get status color
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, job?: Job) => {
+    // Check if job was skipped (completed but with skipped result)
+    if (status.toLowerCase() === 'completed' && job?.result?.actual_status === 'skipped') {
+      return 'cyan'; // Different color for skipped jobs
+    }
+    
     switch (status.toLowerCase()) {
       case 'completed':
       case 'success':
@@ -144,6 +149,16 @@ const JobHistory: React.FC = () => {
       default:
         return 'default';
     }
+  };
+
+  // Helper function to get status display text
+  const getStatusText = (status: string, job?: Job) => {
+    // Check if job was skipped (completed but with skipped result)
+    if (status.toLowerCase() === 'completed' && job?.result?.actual_status === 'skipped') {
+      return 'SKIPPED';
+    }
+    
+    return status.toUpperCase();
   };
 
   // Show job details in drawer
@@ -191,9 +206,9 @@ const JobHistory: React.FC = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>
-          {status.toUpperCase()}
+      render: (status: string, record: Job) => (
+        <Tag color={getStatusColor(status, record)}>
+          {getStatusText(status, record)}
         </Tag>
       ),
       filters: [
@@ -301,7 +316,14 @@ const JobHistory: React.FC = () => {
                 {hosts.get(selectedJob.host_id)?.hostname || `Host ID: ${selectedJob.host_id}`}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
-                <Tag color={getStatusColor(selectedJob.status)}>{selectedJob.status.toUpperCase()}</Tag>
+                <Tag color={getStatusColor(selectedJob.status, selectedJob)}>
+                  {getStatusText(selectedJob.status, selectedJob)}
+                </Tag>
+                {selectedJob.result?.status_note && (
+                  <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+                    {selectedJob.result.status_note}
+                  </div>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Dry Run">
                 {selectedJob.is_dry_run ? 'Yes' : 'No'}

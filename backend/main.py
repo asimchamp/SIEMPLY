@@ -28,6 +28,8 @@ from backend.api.configs import router as configs_router
 from backend.api.scheduler import router as scheduler_router
 from backend.api.monitoring import router as monitoring_router
 from backend.api.splunk import router as splunk_router
+from backend.api.packages import router as packages_router
+from backend.api.users import router as users_router
 
 # Configure logging
 logging.basicConfig(
@@ -86,6 +88,8 @@ app.include_router(configs_router)
 app.include_router(scheduler_router)
 app.include_router(monitoring_router)
 app.include_router(splunk_router)
+app.include_router(packages_router)
+app.include_router(users_router)
 
 # Root API route
 @app.get("/")
@@ -102,7 +106,9 @@ async def root():
             "configs": "/configs",
             "scheduler": "/scheduler",
             "monitoring": "/monitoring",
-            "splunk": "/splunk"
+            "splunk": "/splunk",
+            "packages": "/packages",
+            "users": "/users"
         }
     }
 

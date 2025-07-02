@@ -127,6 +127,115 @@ export interface CreateJobData {
   parameters?: Record<string, any>;
 }
 
+// Package types
+export interface DownloadEntry {
+  architecture: string;
+  download_url: string;
+  file_size?: number;
+  checksum?: string;
+  os_compatibility?: string[];
+}
+
+export interface SoftwarePackage {
+  id: number;
+  name: string;
+  package_type: string;
+  version: string;
+  description?: string;
+  vendor: string;
+  downloads: DownloadEntry[];
+  // Legacy fields for backward compatibility
+  download_url?: string;
+  file_size?: number;
+  checksum?: string;
+  architecture: string;
+  os_compatibility: string[];
+  install_command?: string;
+  default_install_dir: string;
+  default_user: string;
+  default_group: string;
+  default_ports?: Record<string, any>;
+  min_requirements?: Record<string, any>;
+  installation_notes?: string;
+  status: string;
+  is_default: boolean;
+  release_date?: string;
+  support_end_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePackageData {
+  name: string;
+  package_type: string;
+  version: string;
+  description?: string;
+  vendor?: string;
+  downloads?: DownloadEntry[];
+  install_command?: string;
+  default_install_dir?: string;
+  default_user?: string;
+  default_group?: string;
+  default_ports?: Record<string, any>;
+  min_requirements?: Record<string, any>;
+  installation_notes?: string;
+  status?: string;
+  is_default?: boolean;
+  release_date?: string;
+  support_end_date?: string;
+}
+
+export interface UpdatePackageData {
+  name?: string;
+  description?: string;
+  vendor?: string;
+  downloads?: DownloadEntry[];
+  install_command?: string;
+  default_install_dir?: string;
+  default_user?: string;
+  default_group?: string;
+  default_ports?: Record<string, any>;
+  min_requirements?: Record<string, any>;
+  installation_notes?: string;
+  status?: string;
+  is_default?: boolean;
+  release_date?: string;
+  support_end_date?: string;
+}
+
+// User types
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  full_name?: string;
+  role: string; // "admin" or "user"
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+  last_login?: string;
+}
+
+export interface CreateUserData {
+  username: string;
+  email: string;
+  password: string;
+  full_name?: string;
+  role?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateUserData {
+  email?: string;
+  full_name?: string;
+  role?: string;
+  is_active?: boolean;
+}
+
+export interface ChangePasswordData {
+  password: string;
+}
+
 // Host service
 export const hostService = {
   // Get all hosts
@@ -229,10 +338,11 @@ export const jobService = {
     console.log("Installing Splunk UF with parameters:", { hostId, parameters, isDryRun });
     
     try {
-      const response = await api.post('/jobs/install/splunk-uf', { 
+      const response = await api.post('/jobs/install/splunk-uf', parameters, {
+        params: {
         host_id: hostId, 
-        parameters, 
         is_dry_run: isDryRun 
+        }
       });
       return response.data;
     } catch (error: any) {
@@ -243,41 +353,45 @@ export const jobService = {
 
   // Install Splunk Enterprise
   async installSplunkEnterprise(hostId: number, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
-    const response = await api.post('/jobs/install/splunk-enterprise', { 
+    const response = await api.post('/jobs/install/splunk-enterprise', parameters, {
+      params: {
       host_id: hostId, 
-      parameters, 
       is_dry_run: isDryRun 
+      }
     });
     return response.data;
   },
 
   // Install Cribl Worker
   async installCriblWorker(hostId: number, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
-    const response = await api.post('/jobs/install/cribl-worker', { 
+    const response = await api.post('/jobs/install/cribl-worker', parameters, {
+      params: {
       host_id: hostId, 
-      parameters, 
       is_dry_run: isDryRun 
+      }
     });
     return response.data;
   },
 
   // Install Cribl Leader
   async installCriblLeader(hostId: number, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
-    const response = await api.post('/jobs/install/cribl-leader', { 
+    const response = await api.post('/jobs/install/cribl-leader', parameters, {
+      params: {
       host_id: hostId, 
-      parameters, 
       is_dry_run: isDryRun 
+      }
     });
     return response.data;
   },
 
   // Submit custom job (for user commands and scripts)
   async submitCustomJob(hostId: number, jobType: string, parameters: Record<string, any>, isDryRun: boolean = false): Promise<Job> {
-    const response = await api.post('/jobs/custom', { 
+    const response = await api.post('/jobs/custom', parameters, {
+      params: {
       host_id: hostId,
       job_type: jobType,
-      parameters, 
       is_dry_run: isDryRun 
+      }
     });
     return response.data;
   },
@@ -285,6 +399,124 @@ export const jobService = {
   // Cancel a job
   async cancelJob(id: number): Promise<Job> {
     const response = await api.post(`/jobs/${id}/cancel`);
+    return response.data;
+  }
+};
+
+// Package service
+export const packageService = {
+  // Get all packages
+  async getAllPackages(): Promise<SoftwarePackage[]> {
+    const response = await api.get('/packages');
+    return response.data;
+  },
+
+  // Get packages with filters
+  async getPackages(filters?: { package_type?: string; status?: string; vendor?: string }): Promise<SoftwarePackage[]> {
+    const params = new URLSearchParams();
+    if (filters?.package_type) params.append('package_type', filters.package_type);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.vendor) params.append('vendor', filters.vendor);
+    
+    const response = await api.get('/packages', { params });
+    return response.data;
+  },
+
+  // Get a single package by ID
+  async getPackage(id: number): Promise<SoftwarePackage> {
+    const response = await api.get(`/packages/${id}`);
+    return response.data;
+  },
+
+  // Create a new package
+  async createPackage(data: CreatePackageData): Promise<SoftwarePackage> {
+    const response = await api.post('/packages', data);
+    return response.data;
+  },
+
+  // Update a package
+  async updatePackage(id: number, data: UpdatePackageData): Promise<SoftwarePackage> {
+    const response = await api.put(`/packages/${id}`, data);
+    return response.data;
+  },
+
+  // Delete a package
+  async deletePackage(id: number): Promise<{ message: string }> {
+    const response = await api.delete(`/packages/${id}`);
+    return response.data;
+  },
+
+  // Get available package types
+  async getAvailableTypes(): Promise<string[]> {
+    const response = await api.get('/packages/types/available');
+    return response.data;
+  },
+
+  // Get available package statuses
+  async getAvailableStatuses(): Promise<string[]> {
+    const response = await api.get('/packages/status/available');
+    return response.data;
+  },
+
+  // Set package as default for its type
+  async setDefaultPackage(id: number): Promise<SoftwarePackage> {
+    const response = await api.post(`/packages/${id}/set-default`);
+    return response.data;
+  },
+
+  // Get default packages by type
+  async getDefaultPackages(): Promise<SoftwarePackage[]> {
+    const response = await api.get('/packages/defaults/by-type');
+    return response.data;
+  },
+
+  // Bulk import packages
+  async bulkImportPackages(packages: CreatePackageData[]): Promise<SoftwarePackage[]> {
+    const response = await api.post('/packages/bulk-import', packages);
+    return response.data;
+  }
+};
+
+// User service
+export const userService = {
+  // Get all users
+  async getAllUsers(): Promise<User[]> {
+    const response = await api.get('/users');
+    return response.data;
+  },
+
+  // Get a single user by ID
+  async getUser(id: number): Promise<User> {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  // Create a new user
+  async createUser(data: CreateUserData): Promise<User> {
+    const response = await api.post('/users', data);
+    return response.data;
+  },
+
+  // Update a user
+  async updateUser(id: number, data: UpdateUserData): Promise<User> {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  },
+
+  // Delete a user
+  async deleteUser(id: number): Promise<void> {
+    await api.delete(`/users/${id}`);
+  },
+
+  // Change user password
+  async changePassword(id: number, data: ChangePasswordData): Promise<{ message: string }> {
+    const response = await api.post(`/users/${id}/change-password`, data);
+    return response.data;
+  },
+
+  // Toggle user active status
+  async toggleActiveStatus(id: number): Promise<User> {
+    const response = await api.post(`/users/${id}/toggle-active`);
     return response.data;
   }
 };
@@ -308,7 +540,7 @@ export const splunkService = {
       // Ensure required parameters are set with defaults if not provided
       const finalParams = {
         version: parameters.version || '9.4.3',
-        install_dir: parameters.install_dir || '/opt/splunkforwarder',
+        install_dir: parameters.install_dir || '/opt',
         admin_password: parameters.admin_password || 'changeme',
         user: parameters.user || 'splunk',
         group: parameters.group || 'splunk',
