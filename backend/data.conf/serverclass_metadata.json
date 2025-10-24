@@ -1,0 +1,26 @@
+{
+  "server_classes": {
+    "splunk-hf": {
+      "id": "sc_1",
+      "name": "splunk-hf",
+      "description": "HF class",
+      "host_ids": [
+        1
+      ],
+      "hostnames": [
+        "Splunk-HF"
+      ],
+      "host_count": 1,
+      "tags": [
+        "HF",
+        "splunk"
+      ],
+      "is_active": true,
+      "created_by": "admin",
+      "created_at": "2025-10-21T19:48:16.862705Z",
+      "updated_at": "2025-10-21T19:48:16.862722Z"
+    }
+  },
+  "version": "1.0",
+  "last_updated": "2025-10-21T19:48:16.862742Z"
+}

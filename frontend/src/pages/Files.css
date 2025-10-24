@@ -1,0 +1,151 @@
+/* Dark theme styling for Files page */
+
+/* Override Ant Design components for dark theme */
+.files-page .ant-input {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+.files-page .ant-input::placeholder {
+  color: #8c8c8c !important;
+}
+
+.files-page .ant-input-search .ant-input {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+.files-page .ant-input-search .ant-input-search-button {
+  background-color: #1890ff !important;
+  border-color: #1890ff !important;
+  color: #ffffff !important;
+}
+
+.files-page .ant-card {
+  background-color: #1f1f1f !important;
+  border-color: #303030 !important;
+}
+
+.files-page .ant-card-body {
+  color: #ffffff !important;
+}
+
+.files-page .ant-breadcrumb {
+  color: #ffffff !important;
+}
+
+.files-page .ant-breadcrumb-separator {
+  color: #8c8c8c !important;
+}
+
+.files-page .ant-empty-description {
+  color: #8c8c8c !important;
+}
+
+.files-page .ant-modal-content {
+  background-color: #1f1f1f !important;
+  border-color: #303030 !important;
+}
+
+.files-page .ant-modal-header {
+  background-color: #1f1f1f !important;
+  border-bottom-color: #303030 !important;
+}
+
+.files-page .ant-modal-title {
+  color: #ffffff !important;
+}
+
+.files-page .ant-modal-body {
+  color: #ffffff !important;
+}
+
+.files-page .ant-modal-footer {
+  border-top-color: #303030 !important;
+}
+
+.files-page .ant-dropdown-menu {
+  background-color: #1f1f1f !important;
+  border-color: #303030 !important;
+}
+
+.files-page .ant-dropdown-menu-item {
+  color: #ffffff !important;
+}
+
+.files-page .ant-dropdown-menu-item:hover {
+  background-color: #262626 !important;
+}
+
+.files-page .ant-dropdown-menu-item-danger {
+  color: #ff4d4f !important;
+}
+
+.files-page .ant-dropdown-menu-item-danger:hover {
+  background-color: #2a1215 !important;
+}
+
+/* File card hover effects */
+.files-page .ant-card:hover {
+  border-color: #1890ff !important;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15) !important;
+}
+
+/* Button styling for dark theme */
+.files-page .ant-btn {
+  border-color: #404040 !important;
+}
+
+.files-page .ant-btn-default {
+  background-color: #262626 !important;
+  color: #ffffff !important;
+}
+
+.files-page .ant-btn-default:hover {
+  background-color: #404040 !important;
+  border-color: #595959 !important;
+}
+
+.files-page .ant-btn-primary {
+  background-color: #1890ff !important;
+  border-color: #1890ff !important;
+}
+
+.files-page .ant-btn-primary:hover {
+  background-color: #40a9ff !important;
+  border-color: #40a9ff !important;
+}
+
+/* Tag styling */
+.files-page .ant-tag {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+/* Loading spinner */
+.files-page .ant-spin-dot-item {
+  background-color: #1890ff !important;
+}
+
+/* Search component */
+.files-page .ant-input-search .ant-input-group-addon {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+}
+
+/* Upload component */
+.files-page .ant-upload {
+  color: #ffffff !important;
+}
+
+.files-page .ant-upload-drag {
+  background-color: #262626 !important;
+  border-color: #404040 !important;
+}
+
+.files-page .ant-upload-drag:hover {
+  border-color: #1890ff !important;
+} 

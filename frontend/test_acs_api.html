@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACS API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Splunk ACS API Connection Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Information</h3>
+        <p><strong>Backend URL:</strong> <code>http://192.168.100.44:5050/splunk-acs</code></p>
+        <p><strong>Purpose:</strong> Verify ACS API endpoints are accessible and responding</p>
+        <p><strong>Note:</strong> These tests will show "Not authenticated" errors, which is expected and confirms the endpoints are working.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 API Endpoint Tests</h3>
+        <button onclick="testHealthEndpoint()">Test Health Endpoint</button>
+        <button onclick="testConfigEndpoint()">Test Config Endpoint</button>
+        <button onclick="testChangesEndpoint()">Test Changes Endpoint</button>
+        <button onclick="testMetricsEndpoint()">Test Metrics Endpoint</button>
+        <button onclick="testAllEndpoints()">Test All Endpoints</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://192.168.100.44:5050/splunk-acs';
+        
+        function addResult(title, content, isSuccess = true) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-section ${isSuccess ? 'success' : 'error'}`;
+            
+            resultDiv.innerHTML = `
+                <h4>${title}</h4>
+                <pre>${JSON.stringify(content, null, 2)}</pre>
+            `;
+            
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testEndpoint(endpoint, description) {
+            try {
+                console.log(`Testing ${endpoint}...`);
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                const data = await response.json();
+                
+                const result = {
+                    endpoint: endpoint,
+                    status: response.status,
+                    statusText: response.statusText,
+                    response: data,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Consider it a success if we get a response (even if it's an auth error)
+                const isSuccess = response.status !== 404;
+                addResult(`${description} (${endpoint})`, result, isSuccess);
+                
+                return result;
+            } catch (error) {
+                const result = {
+                    endpoint: endpoint,
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                };
+                addResult(`${description} (${endpoint}) - ERROR`, result, false);
+                return result;
+            }
+        }
+
+        async function testHealthEndpoint() {
+            await testEndpoint('/health', 'Health Check');
+        }
+
+        async function testConfigEndpoint() {
+            await testEndpoint('/config', 'Configurations');
+        }
+
+        async function testChangesEndpoint() {
+            await testEndpoint('/changes', 'Change Requests');
+        }
+
+        async function testMetricsEndpoint() {
+            await testEndpoint('/metrics', 'Metrics');
+        }
+
+        async function testAllEndpoints() {
+            document.getElementById('results').innerHTML = '';
+            addResult('🧪 Starting All Tests', { timestamp: new Date().toISOString() }, true);
+            
+            await testHealthEndpoint();
+            await testConfigEndpoint();
+            await testChangesEndpoint();
+            await testMetricsEndpoint();
+            
+            addResult('✅ All Tests Complete', { timestamp: new Date().toISOString() }, true);
+        }
+
+        // Auto-run basic test on page load
+        window.onload = function() {
+            addResult('🚀 Page Loaded', { 
+                message: 'ACS API test page ready. Click buttons above to test endpoints.',
+                timestamp: new Date().toISOString() 
+            }, true);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+# Sample Runbook for SIEMply Automation
+# This file demonstrates the YAML structure for automation playbooks
+
+automation_playbook:
+  
+  # Job 1: Deploy Splunk Universal Forwarder to web servers
+  - job:
+      id: deploy_splunk_uf_webservers
+      name: "Deploy Splunk Universal Forwarder to web servers"
+      
+      targets:
+        server_class: webservers
+      
+      execution_options:
+        remote_user: root
+        on_failure: stop
+      
+      vars:
+        splunk_version: "9.0.4"
+        deployment_server: "splunk-deployment-server.internal"
+        
+      tasks:
+        - name: "Stop existing Splunk UF service if running"
+          service:
+            name: SplunkForwarder
+            state: stopped
+        
+        - name: "Download Splunk UF package"
+          command: "wget -O /tmp/splunkforwarder-{{ splunk_version }}-linux-2.6-x86_64.rpm https://download.splunk.com/products/universalforwarder/releases/{{ splunk_version }}/linux/splunkforwarder-{{ splunk_version }}-linux-2.6-x86_64.rpm"
+        
+        - name: "Install Splunk UF package"
+          command: "rpm -i /tmp/splunkforwarder-{{ splunk_version }}-linux-2.6-x86_64.rpm"
+        
+        - name: "Configure Splunk UF deployment client"
+          command: "/opt/splunkforwarder/bin/splunk set deploy-poll {{ deployment_server }}:8089"
+        
+        - name: "Start and enable Splunk UF service"
+          service:
+            name: SplunkForwarder
+            state: started
+            enabled: yes
+
+  # Job 2: Update system packages on database servers
+  - job:
+      id: update_db_servers_packages
+      name: "Update system packages on database servers"
+      
+      targets:
+        server_class: dbservers
+      
+      execution_options:
+        remote_user: root
+        on_failure: continue
+      
+      tasks:
+        - name: "Update package cache"
+          command: "apt-get update"
+        
+        - name: "Upgrade all packages"
+          command: "apt-get upgrade -y"
+        
+        - name: "Clean up package cache"
+          command: "apt-get autoremove -y && apt-get autoclean"
+        
+        - name: "Check if reboot is required"
+          command: "test -f /var/run/reboot-required"
+          register: reboot_required
+        
+        - name: "Reboot if required"
+          reboot:
+            reboot_timeout: 600
+          when: reboot_required.rc == 0
+
+  # Job 3: Deploy application to specific hosts
+  - job:
+      id: deploy_webapp_production
+      name: "Deploy web application to production servers"
+      
+      targets:
+        hosts: [1, 2, 3]  # Specific host IDs
+      
+      execution_options:
+        remote_user: deploy
+        become: yes
+        become_user: root
+      
+      vars:
+        app_version: "2.1.0"
+        source_repo: "git@github.com:mycompany/webapp.git"
+        app_dir: "/var/www/webapp"
+        
+      tasks:
+        - name: "Stop web server"
+          service:
+            name: nginx
+            state: stopped
+        
+        - name: "Backup current application"
+          command: "cp -r {{ app_dir }} {{ app_dir }}.backup.$(date +%Y%m%d_%H%M%S)"
+        
+        - name: "Fetch latest application code"
+          git:
+            repo: "{{ source_repo }}"
+            dest: "{{ app_dir }}"
+            version: "v{{ app_version }}"
+        
+        - name: "Install application dependencies"
+          command: "cd {{ app_dir }} && npm install --production"
+        
+        - name: "Set proper permissions"
+          command: "chown -R www-data:www-data {{ app_dir }}"
+        
+        - name: "Start web server"
+          service:
+            name: nginx
+            state: started
+
+  # Job 4: Monitor system health
+  - job:
+      id: system_health_check
+      name: "Perform system health check"
+      
+      targets:
+        server_class: all_servers
+      
+      execution_options:
+        remote_user: root
+      
+      tasks:
+        - name: "Check disk usage"
+          command: "df -h"
+          register: disk_usage
+        
+        - name: "Check memory usage"
+          command: "free -h"
+          register: memory_usage
+        
+        - name: "Check system load"
+          command: "uptime"
+          register: system_load
+        
+        - name: "Display system information"
+          debug:
+            msg: |
+              Disk Usage:
+              {{ disk_usage.stdout }}
+              
+              Memory Usage:
+              {{ memory_usage.stdout }}
+              
+              System Load:
+              {{ system_load.stdout }}
+
+  # Job 5: Security patch deployment
+  - job:
+      id: security_patches_deploy
+      name: "Deploy security patches"
+      
+      targets:
+        server_class: production_servers
+      
+      execution_options:
+        remote_user: root
+        on_failure: stop
+      
+      tasks:
+        - name: "Create backup snapshot"
+          command: "snapshot create backup_$(date +%Y%m%d_%H%M%S)"
+        
+        - name: "Download security patches"
+          command: "apt-get update && apt-get download $(apt list --upgradable | grep security | cut -d'/' -f1)"
+        
+        - name: "Install security patches"
+          command: "apt-get install -y $(apt list --upgradable | grep security | cut -d'/' -f1)"
+        
+        - name: "Verify patch installation"
+          command: "apt list --installed | grep -E '(security|CVE)'"
+        
+        - name: "Restart affected services"
+          service:
+            name: ssh
+            state: restarted 
