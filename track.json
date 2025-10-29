@@ -1501,8 +1501,44 @@
               "Ensures compatible bcrypt version before passlib installation"
             ]
           }
-        ],
-        "impact": "The setup.sh script now installs compatible bcrypt versions that work correctly with passlib, preventing the '__about__' attribute error and password hashing errors. Database initialization now only creates tables without attempting to create users, avoiding the bcrypt errors entirely. The admin user is created only once by create_admin.py with the correct password (admin123), eliminating conflicts and ensuring successful setup completion. This fix resolves the final blocker preventing RHEL 9.6 installations from completing successfully."
-      }
-    ]
-  }
+          ],
+          "impact": "The setup.sh script now installs compatible bcrypt versions that work correctly with passlib, preventing the '__about__' attribute error and password hashing errors. Database initialization now only creates tables without attempting to create users, avoiding the bcrypt errors entirely. The admin user is created only once by create_admin.py with the correct password (admin123), eliminating conflicts and ensuring successful setup completion. This fix resolves the final blocker preventing RHEL 9.6 installations from completing successfully."
+        },
+        {
+          "date": "2025-10-29",
+          "description": "Fixed database file permission issues when running setup as root",
+          "rationale": "User encountered 'sqlite3.OperationalError: unable to open database file' when starting backend after setup. This occurred because setup.sh running as root created database files owned by root, but the application (systemctl service) tries to run as a non-root user and can't access the database. Need to ensure proper file ownership and permissions.",
+          "changes": [
+            {
+              "file": "setup.sh",
+              "changes": [
+                "Added database file permission fix immediately after database creation (Step 7)",
+                "Detects if running as root and gets actual user from SUDO_USER environment variable",
+                "Sets database and backend directory ownership to SUDO_USER when available",
+                "Falls back to world-writable permissions (666) if running as actual root user",
+                "Sets database file to 664 permissions for user access when SUDO_USER exists",
+                "Added final permission fix at end of setup for all application files",
+                "Sets ownership of backend, logs, playbooks, and venv directories to correct user",
+                "Provides warning and instructions if running as actual root (not sudo)",
+                "Uses 'chown -R ... || true' to prevent errors if files don't exist yet"
+              ]
+            },
+            {
+              "file": "fix_permissions.sh",
+              "changes": [
+                "Created standalone permission fix script for existing installations",
+                "Detects current user context (root, sudo user, or regular user)",
+                "Fixes ownership of backend, logs, playbooks, and venv directories",
+                "Sets database file to 664 or 666 permissions depending on context",
+                "Shows before/after permission status for verification",
+                "Tests database accessibility after fixing permissions",
+                "Can be run anytime to repair permissions without rerunning full setup",
+                "Executable script (chmod +x) ready to use"
+              ]
+            }
+          ],
+          "impact": "The setup.sh script now properly handles file ownership and permissions when run with sudo. It detects the actual user (via SUDO_USER) and sets all application files to be owned by that user, not root. This ensures the database and other files are accessible when the application runs (either via systemctl service or manual start). The fix_permissions.sh script provides a quick fix for existing installations - users experiencing 'unable to open database file' errors can simply run 'sudo ./fix_permissions.sh' to repair permissions without rerunning the full setup."
+        }
+      ]
+    }
+  
