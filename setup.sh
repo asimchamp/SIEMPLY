@@ -99,6 +99,25 @@ if ! command -v curl &>/dev/null; then
     fi
 fi
 
+# Check and install sqlite3 (needed for database validation)
+if ! command -v sqlite3 &>/dev/null; then
+    echo -e "${YELLOW}✗ sqlite3 is not installed${NC}"
+    if [ "$IS_ROOT" = true ]; then
+        echo -e "${YELLOW}Installing sqlite3...${NC}"
+        if [ "$OS_FAMILY" == "debian" ]; then
+            apt-get install -y sqlite3
+        else
+            $PKG_MANAGER install -y sqlite
+        fi
+        
+        if command -v sqlite3 &>/dev/null; then
+            echo -e "${GREEN}✓ sqlite3 installed successfully${NC}"
+        fi
+    fi
+else
+    echo -e "${GREEN}✓ sqlite3 is installed${NC}"
+fi
+
 # Check Python
 if command -v python3 &>/dev/null; then
     PYTHON_VERSION=$(python3 --version | cut -d ' ' -f 2)
@@ -301,13 +320,64 @@ echo -e "${GREEN}✓ Frontend .env file created with API URL: http://${SERVER_IP
 
 # Step 7: Initialize database
 echo -e "\n${YELLOW}Step 7: Initializing database...${NC}"
+
+# Check for existing database file and validate it
+DB_FILE="$SCRIPT_DIR/backend/siemply.db"
+if [ -f "$DB_FILE" ]; then
+    echo -e "${YELLOW}Existing database file found. Validating...${NC}"
+    
+    # Try to validate the database file
+    if ! sqlite3 "$DB_FILE" "PRAGMA integrity_check;" &>/dev/null; then
+        echo -e "${YELLOW}⚠ Database file is corrupted or invalid${NC}"
+        echo -e "${YELLOW}Backing up and removing corrupted database...${NC}"
+        
+        # Backup the corrupted file with timestamp
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        mv "$DB_FILE" "${DB_FILE}.corrupted.${TIMESTAMP}.bak" 2>/dev/null || rm -f "$DB_FILE"
+        
+        if [ -f "${DB_FILE}.corrupted.${TIMESTAMP}.bak" ]; then
+            echo -e "${GREEN}✓ Corrupted database backed up as: siemply.db.corrupted.${TIMESTAMP}.bak${NC}"
+        else
+            echo -e "${GREEN}✓ Corrupted database removed${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Database file exists and appears valid. Backing up...${NC}"
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        cp "$DB_FILE" "${DB_FILE}.backup.${TIMESTAMP}"
+        echo -e "${GREEN}✓ Database backed up as: siemply.db.backup.${TIMESTAMP}${NC}"
+    fi
+fi
+
+# Ensure backend directory exists
+mkdir -p "$SCRIPT_DIR/backend"
+
+# Initialize the database
 cd "$SCRIPT_DIR"
 python backend/init_db.py
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Failed to initialize database${NC}"
+    echo -e "${YELLOW}Trying to remove database file and retry...${NC}"
+    rm -f "$DB_FILE"
+    python backend/init_db.py
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗ Failed to initialize database after retry${NC}"
+        exit 1
+    fi
+fi
+
+# Verify database was created successfully
+if [ -f "$DB_FILE" ]; then
+    # Check if database is valid
+    if sqlite3 "$DB_FILE" "SELECT name FROM sqlite_master WHERE type='table' LIMIT 1;" &>/dev/null; then
+        echo -e "${GREEN}✓ Database initialized and validated successfully${NC}"
+    else
+        echo -e "${RED}✗ Database file created but validation failed${NC}"
+        exit 1
+    fi
+else
+    echo -e "${RED}✗ Database file was not created${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Database initialized${NC}"
 
 # Step 8: Create admin user
 echo -e "\n${YELLOW}Step 8: Creating admin user...${NC}"
