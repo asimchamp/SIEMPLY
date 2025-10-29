@@ -1481,6 +1481,28 @@
           }
         ],
         "impact": "The setup.sh script now handles corrupted database files gracefully. When running setup on a system with a previous failed installation, the script will automatically detect the corrupted database file, back it up with a timestamp, remove it, and create a fresh database. This prevents the 'file is not a database' error and allows setup to complete successfully. The script also validates the database after creation to ensure it's functional before proceeding. Users no longer need to manually delete corrupted database files - the script handles everything automatically."
+      },
+      {
+        "date": "2025-10-29",
+        "description": "Fixed bcrypt compatibility issues and admin user creation conflicts",
+        "rationale": "User encountered bcrypt errors during database initialization: 'AttributeError: module bcrypt has no attribute __about__' and 'ValueError: password cannot be longer than 72 bytes'. The issue was caused by incompatible bcrypt 4.x version with passlib, and init_db.py trying to create admin user which conflicted with create_admin.py step.",
+        "changes": [
+          {
+            "file": "setup.sh",
+            "changes": [
+              "Added explicit bcrypt version installation before other dependencies",
+              "Installs bcrypt==4.0.1 first, falls back to bcrypt==3.2.2 if needed",
+              "Added bcrypt installation verification step",
+              "Modified database initialization to skip admin user creation in init_db.py",
+              "Created temporary init_db_temp.py script that only creates tables (no user creation)",
+              "Removed conflict between init_db.py and create_admin.py admin user creation",
+              "Admin user is now only created once by create_admin.py with correct password (admin123)",
+              "Temporary init script is cleaned up after successful database creation",
+              "Ensures compatible bcrypt version before passlib installation"
+            ]
+          }
+        ],
+        "impact": "The setup.sh script now installs compatible bcrypt versions that work correctly with passlib, preventing the '__about__' attribute error and password hashing errors. Database initialization now only creates tables without attempting to create users, avoiding the bcrypt errors entirely. The admin user is created only once by create_admin.py with the correct password (admin123), eliminating conflicts and ensuring successful setup completion. This fix resolves the final blocker preventing RHEL 9.6 installations from completing successfully."
       }
     ]
   }
