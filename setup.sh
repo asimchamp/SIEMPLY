@@ -422,6 +422,33 @@ else
     exit 1
 fi
 
+# Fix database file permissions (critical for application access)
+echo -e "${YELLOW}Setting database file permissions...${NC}"
+if [ "$IS_ROOT" = true ]; then
+    # Running as root - need to set proper ownership
+    TARGET_USER="${SUDO_USER:-root}"
+    
+    if [ "$TARGET_USER" != "root" ] && [ -n "$TARGET_USER" ]; then
+        # We have a real user who used sudo
+        echo -e "${YELLOW}Setting ownership to user: $TARGET_USER${NC}"
+        chown -R $TARGET_USER:$TARGET_USER "$SCRIPT_DIR/backend" 2>/dev/null || true
+        chown $TARGET_USER:$TARGET_USER "$DB_FILE" 2>/dev/null || true
+        chmod 664 "$DB_FILE"
+        echo -e "${GREEN}✓ Database ownership set to $TARGET_USER${NC}"
+    else
+        # Running as actual root user (no sudo)
+        # Make database accessible by setting liberal permissions
+        chmod 666 "$DB_FILE"
+        chmod 775 "$SCRIPT_DIR/backend"
+        echo -e "${YELLOW}⚠ Database set to world-writable (running as root)${NC}"
+        echo -e "${YELLOW}⚠ For better security, run as: sudo -u youruser ./setup.sh${NC}"
+    fi
+else
+    # Running as non-root user - just ensure writable
+    chmod 644 "$DB_FILE"
+    echo -e "${GREEN}✓ Database permissions set${NC}"
+fi
+
 # Step 8: Create admin user
 echo -e "\n${YELLOW}Step 8: Creating admin user...${NC}"
 cd "$SCRIPT_DIR"
@@ -588,4 +615,20 @@ echo -e "\nYou can log in with:"
 echo -e "  Username: ${YELLOW}admin${NC}"
 echo -e "  Password: ${YELLOW}admin123${NC}"
 
-echo -e "\n${YELLOW}Note:${NC} Logs are stored in: ${BLUE}$SCRIPT_DIR/logs/${NC}" 
+echo -e "\n${YELLOW}Note:${NC} Logs are stored in: ${BLUE}$SCRIPT_DIR/logs/${NC}"
+
+# Final permission fix for all application files
+if [ "$IS_ROOT" = true ]; then
+    TARGET_USER="${SUDO_USER:-root}"
+    if [ "$TARGET_USER" != "root" ] && [ -n "$TARGET_USER" ]; then
+        echo -e "\n${YELLOW}Setting final file ownership to $TARGET_USER...${NC}"
+        chown -R $TARGET_USER:$TARGET_USER "$SCRIPT_DIR/backend" 2>/dev/null || true
+        chown -R $TARGET_USER:$TARGET_USER "$SCRIPT_DIR/logs" 2>/dev/null || true
+        chown -R $TARGET_USER:$TARGET_USER "$SCRIPT_DIR/playbooks" 2>/dev/null || true
+        chown -R $TARGET_USER:$TARGET_USER "$SCRIPT_DIR/venv" 2>/dev/null || true
+        echo -e "${GREEN}✓ File ownership configured for $TARGET_USER${NC}"
+    else
+        echo -e "\n${YELLOW}⚠ Running as root - file permissions may need manual adjustment${NC}"
+        echo -e "${YELLOW}To fix permissions, run: chmod -R 777 $SCRIPT_DIR/backend $SCRIPT_DIR/logs${NC}"
+    fi
+fi 
