@@ -1360,6 +1360,80 @@
           }
         ],
         "impact": "SIEMPLY project now has a fully functional Git repository with Git LFS support for efficient database file handling. The github-update.sh script provides an interactive menu for easy code updates to GitHub with options for quick updates, branch management, and database backup. The script is specifically tailored to SIEMPLY's structure (backend/siemply.db instead of Prisma), follows security best practices (excludes .env files by default), and integrates with the existing project workflow. Users can now easily manage code updates, create branches, push to main, and track database changes with LFS."
+      },
+      {
+        "date": "2025-10-29",
+        "description": "Hidden Build, Executions, and Splunk ACS menu items from sidebar navigation",
+        "rationale": "User requested to temporarily hide these three menu items from the sidebar to simplify the UI, while keeping the underlying source code intact for future reactivation when needed.",
+        "changes": [
+          {
+            "file": "frontend/src/components/Layout.tsx",
+            "changes": [
+              "Commented out Build menu item (lines 89-94) with clear comment indicating it's temporarily hidden",
+              "Commented out Executions menu item (lines 113-118) with clear comment for future re-enablement",
+              "Commented out Splunk ACS menu item and all its children (lines 119-146) with clear comment",
+              "All menu items marked with '// Temporarily hidden - [Feature name] (uncomment to re-enable)' for easy restoration",
+              "Routes remain active in App.tsx - users can still access these pages via direct URL navigation"
+            ]
+          }
+        ],
+        "impact": "The sidebar now displays a cleaner, simplified navigation menu with only Dashboard, Host Management, Jobs, Playbooks, Database, and Settings visible. The Build, Executions, and Splunk ACS features are hidden from the sidebar but remain fully functional in the codebase and can be accessed via direct URLs. These features can be easily re-enabled by uncommenting the marked sections in Layout.tsx."
+      },
+      {
+        "date": "2025-10-29",
+        "description": "Fixed playbooks page not loading - API endpoint trailing slash issue",
+        "rationale": "The PlaybookList page was failing to fetch playbooks because the frontend was calling /api/playbooks without a trailing slash, but FastAPI was expecting /api/playbooks/ with a trailing slash. This caused a 307 redirect that the fetch API didn't follow properly, resulting in a connection refused error.",
+        "changes": [
+          {
+            "file": "frontend/src/pages/PlaybookList.tsx",
+            "changes": [
+              "Updated fetchPlaybooks() to call '/api/playbooks/' with trailing slash instead of '/api/playbooks'",
+              "This ensures the request goes directly to the correct endpoint without needing a redirect"
+            ]
+          }
+        ],
+        "impact": "The Playbooks page now successfully loads and displays all existing playbooks from the backend/playbooks directory. The API returns 5 existing playbooks including Splunk_Delete.yml, Splunk_host_service.yml, test_job_tracking.yml, splunk_hf1a.yml, and test_playbook.yml. Users can now view, edit, execute, and delete playbooks without any connection errors."
+      },
+      {
+        "date": "2025-10-29",
+        "description": "Enhanced setup.sh script with systemctl service support and RedHat OS compatibility",
+        "rationale": "The original setup.sh script did not create systemctl services for production deployments and was only compatible with Debian/Ubuntu systems. User requested to add systemctl service creation and make the script compatible with RedHat-based operating systems (RHEL, CentOS, Fedora, Rocky, AlmaLinux).",
+        "changes": [
+          {
+            "file": "setup.sh",
+            "changes": [
+              "Added OS detection to identify Debian-based vs RedHat-based systems",
+              "Added package manager detection (apt/dnf/yum) with automatic selection based on OS",
+              "Added root user detection - script now checks if running with sudo privileges",
+              "Updated python3-venv installation instructions to be OS-specific (python3-venv for Debian, python3-devel for RedHat)",
+              "Added Step 8.5: Frontend production build step (runs when executing as root)",
+              "Added Step 9: Systemctl service file creation with three services:",
+              "  - siemply-backend.service: Backend FastAPI service on port 5050",
+              "  - siemply-frontend.service: Frontend Vite preview service on port 8500",
+              "  - siemply.service: Combined service that requires both backend and frontend",
+              "Service files include automatic restart, log redirection to logs/ directory, and security hardening (NoNewPrivileges, PrivateTmp)",
+              "Added interactive prompt to enable and start services after creation",
+              "Added logs directory creation with proper user permissions",
+              "Added comprehensive service management instructions in completion message",
+              "Script now works on both Debian (apt) and RedHat (yum/dnf) package managers"
+            ]
+          },
+          {
+            "file": "SYSTEMCTL_SERVICES.md",
+            "changes": [
+              "Created comprehensive documentation for systemctl service management",
+              "Documented installation methods (automatic via setup.sh and manual)",
+              "Added service management commands (start, stop, restart, status)",
+              "Added log viewing instructions (journalctl and file-based logs)",
+              "Added troubleshooting section with common issues and solutions",
+              "Documented SELinux configuration for RedHat-based systems",
+              "Added firewall configuration for both UFW (Debian) and firewalld (RedHat)",
+              "Included performance tuning options and resource limits",
+              "Added uninstallation instructions for complete cleanup"
+            ]
+          }
+        ],
+        "impact": "The setup.sh script is now production-ready and works across all major Linux distributions. When run with sudo, it automatically creates systemd service files that enable SIEMply to run as a system service with automatic startup on boot, proper logging, and automatic restart on failure. The script intelligently detects the operating system and uses the appropriate package manager (apt for Debian/Ubuntu, dnf/yum for RHEL/CentOS/Fedora/Rocky/AlmaLinux). Services can be managed using standard systemctl commands, and logs are available both through journalctl and file-based logging in the logs/ directory. This makes SIEMply suitable for production deployments on any major Linux distribution."
       }
     ]
   }

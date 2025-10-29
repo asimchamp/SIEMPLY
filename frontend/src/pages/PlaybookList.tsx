@@ -62,7 +62,7 @@ const PlaybookList: React.FC = () => {
   const fetchPlaybooks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/playbooks');
+      const response = await fetch('/api/playbooks/');
       if (response.ok) {
         const data = await response.json();
         setPlaybooks(data.playbooks || []);

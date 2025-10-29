@@ -86,11 +86,12 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
         },
       ],
     },
-    {
-      key: '/build',
-      icon: <NodeIndexOutlined />,
-      label: 'Build',
-    },
+    // Temporarily hidden - Build feature (uncomment to re-enable)
+    // {
+    //   key: '/build',
+    //   icon: <NodeIndexOutlined />,
+    //   label: 'Build',
+    // },
 
     {
       key: 'playbooks',
@@ -109,38 +110,40 @@ const AppLayout: React.FC<LayoutProps> = ({ children, darkMode, toggleDarkMode }
         },
       ],
     },
-    {
-      key: '/executions',
-      icon: <BarChartOutlined />,
-      label: 'Executions',
-    },
-    {
-      key: 'splunk-acs',
-      icon: <CloudOutlined />,
-      label: 'Splunk ACS',
-      children: [
-        {
-          key: '/splunk-acs/dashboard',
-          icon: <DashboardOutlined />,
-          label: 'ACS Dashboard',
-        },
-        {
-          key: '/splunk-acs/configs',
-          icon: <SettingOutlined />,
-          label: 'Configurations',
-        },
-        {
-          key: '/splunk-acs/ip-allow-lists',
-          icon: <SecurityScanOutlined />,
-          label: 'IP Allow Lists',
-        },
-        {
-          key: '/splunk-acs/changes',
-          icon: <EditOutlined />,
-          label: 'Change Requests',
-        },
-      ],
-    },
+    // Temporarily hidden - Executions feature (uncomment to re-enable)
+    // {
+    //   key: '/executions',
+    //   icon: <BarChartOutlined />,
+    //   label: 'Executions',
+    // },
+    // Temporarily hidden - Splunk ACS feature (uncomment to re-enable)
+    // {
+    //   key: 'splunk-acs',
+    //   icon: <CloudOutlined />,
+    //   label: 'Splunk ACS',
+    //   children: [
+    //     {
+    //       key: '/splunk-acs/dashboard',
+    //       icon: <DashboardOutlined />,
+    //       label: 'ACS Dashboard',
+    //     },
+    //     {
+    //       key: '/splunk-acs/configs',
+    //       icon: <SettingOutlined />,
+    //       label: 'Configurations',
+    //     },
+    //     {
+    //       key: '/splunk-acs/ip-allow-lists',
+    //       icon: <SecurityScanOutlined />,
+    //       label: 'IP Allow Lists',
+    //     },
+    //     {
+    //       key: '/splunk-acs/changes',
+    //       icon: <EditOutlined />,
+    //       label: 'Change Requests',
+    //     },
+    //   ],
+    // },
     {
       key: 'database',
       icon: <DatabaseOutlined />,
