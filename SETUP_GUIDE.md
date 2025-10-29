@@ -18,6 +18,7 @@ cd /opt/SIEMPLY
 ```
 
 This will:
+- Check and prompt for Python and Node.js installation (requires sudo if missing)
 - Install Python and Node.js dependencies
 - Create virtual environment
 - Build frontend
@@ -29,13 +30,14 @@ After setup, start manually:
 ./start.sh
 ```
 
-### Option 2: Production Setup (With systemctl services)
+### Option 2: Production Setup (With systemctl services) - RECOMMENDED
 ```bash
 cd /opt/SIEMPLY
 sudo ./setup.sh
 ```
 
 This will do everything from Option 1, PLUS:
+- **Automatically install missing dependencies (curl, Python 3, Node.js)**
 - Detect your OS (Debian or RedHat-based)
 - Build frontend for production
 - Create 3 systemctl services:
@@ -43,6 +45,8 @@ This will do everything from Option 1, PLUS:
   - `siemply-frontend.service` (port 8500)
   - `siemply.service` (combined service)
 - Optionally enable and start services
+
+**✨ NEW:** The script now automatically installs Python and Node.js if they're missing when run with sudo!
 
 ## Systemctl Service Management
 
@@ -127,22 +131,29 @@ After setup, access the application at:
 ### Setup Script Issues
 
 **Problem:** Virtual environment creation fails
+- **Solution:** Run the script with sudo - it will automatically install required packages
 ```bash
-# Debian/Ubuntu
-sudo apt install python3-venv
-
-# RHEL/CentOS/Fedora
-sudo dnf install python3-devel
+sudo ./setup.sh
 ```
 
 **Problem:** Node.js not found
+- **Solution:** The script now installs Node.js automatically when run with sudo!
 ```bash
-# Debian/Ubuntu
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install nodejs
+sudo ./setup.sh
+```
 
-# RHEL/CentOS/Fedora
-sudo dnf install nodejs
+If you must install manually:
+```bash
+# RHEL/CentOS 9
+sudo dnf install nodejs npm
+
+# RHEL/CentOS 8
+sudo dnf module enable nodejs:18
+sudo dnf install nodejs npm
+
+# Debian/Ubuntu
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash -
+sudo apt install nodejs
 ```
 
 ### Service Issues
