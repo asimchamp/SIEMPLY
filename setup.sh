@@ -82,14 +82,58 @@ echo -e "\n${YELLOW}Server IP address:${NC} $SERVER_IP"
 # Step 1: Check system dependencies
 echo -e "\n${YELLOW}Step 1: Checking system dependencies...${NC}"
 
+# Check and install curl (needed for NodeSource setup)
+if ! command -v curl &>/dev/null; then
+    echo -e "${YELLOW}✗ curl is not installed${NC}"
+    if [ "$IS_ROOT" = true ]; then
+        echo -e "${YELLOW}Installing curl...${NC}"
+        if [ "$OS_FAMILY" == "debian" ]; then
+            apt-get update && apt-get install -y curl
+        else
+            $PKG_MANAGER install -y curl
+        fi
+        
+        if command -v curl &>/dev/null; then
+            echo -e "${GREEN}✓ curl installed successfully${NC}"
+        fi
+    fi
+fi
+
 # Check Python
 if command -v python3 &>/dev/null; then
     PYTHON_VERSION=$(python3 --version | cut -d ' ' -f 2)
     echo -e "${GREEN}✓ Python $PYTHON_VERSION is installed${NC}"
 else
-    echo -e "${RED}✗ Python 3 is not installed${NC}"
-    echo -e "${YELLOW}Please install Python 3.8 or higher${NC}"
-    exit 1
+    echo -e "${YELLOW}✗ Python 3 is not installed${NC}"
+    
+    if [ "$IS_ROOT" = true ]; then
+        echo -e "${YELLOW}Installing Python 3 automatically...${NC}"
+        
+        if [ "$OS_FAMILY" == "debian" ]; then
+            apt-get update
+            apt-get install -y python3 python3-pip python3-venv
+        else
+            $PKG_MANAGER install -y python3 python3-pip python3-devel
+        fi
+        
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}✗ Failed to install Python 3${NC}"
+            exit 1
+        fi
+        
+        # Verify installation
+        if command -v python3 &>/dev/null; then
+            PYTHON_VERSION=$(python3 --version | cut -d ' ' -f 2)
+            echo -e "${GREEN}✓ Python $PYTHON_VERSION installed successfully${NC}"
+        else
+            echo -e "${RED}✗ Python installation verification failed${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}✗ Cannot install Python automatically (not running as root)${NC}"
+        echo -e "${YELLOW}Please install Python 3.8 or higher manually${NC}"
+        exit 1
+    fi
 fi
 
 # Check Node.js
@@ -97,9 +141,85 @@ if command -v node &>/dev/null; then
     NODE_VERSION=$(node --version)
     echo -e "${GREEN}✓ Node.js $NODE_VERSION is installed${NC}"
 else
-    echo -e "${RED}✗ Node.js is not installed${NC}"
-    echo -e "${YELLOW}Please install Node.js 16 or higher${NC}"
-    exit 1
+    echo -e "${YELLOW}✗ Node.js is not installed${NC}"
+    
+    if [ "$IS_ROOT" = true ]; then
+        echo -e "${YELLOW}Installing Node.js automatically...${NC}"
+        
+        if [ "$OS_FAMILY" == "debian" ]; then
+            # Install Node.js on Debian/Ubuntu using NodeSource repository
+            echo -e "${YELLOW}Adding NodeSource repository...${NC}"
+            curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}✗ Failed to add NodeSource repository${NC}"
+                exit 1
+            fi
+            
+            echo -e "${YELLOW}Installing Node.js via apt...${NC}"
+            apt-get install -y nodejs
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}✗ Failed to install Node.js${NC}"
+                exit 1
+            fi
+        else
+            # Install Node.js on RedHat/CentOS/Fedora
+            echo -e "${YELLOW}Installing Node.js via $PKG_MANAGER...${NC}"
+            
+            # For RHEL 9/CentOS 9, nodejs is available in default repos
+            # For RHEL 8/CentOS 8, we may need to enable module
+            if [[ "$OS_VERSION" == "9"* ]]; then
+                $PKG_MANAGER install -y nodejs npm
+            elif [[ "$OS_VERSION" == "8"* ]]; then
+                # Enable nodejs:18 module stream for RHEL/CentOS 8
+                $PKG_MANAGER module reset -y nodejs
+                $PKG_MANAGER module enable -y nodejs:18
+                $PKG_MANAGER install -y nodejs npm
+            else
+                # For RHEL 7 or Fedora, use EPEL or direct install
+                if [[ "$OS_NAME" == "fedora" ]]; then
+                    $PKG_MANAGER install -y nodejs npm
+                else
+                    # RHEL 7 - use NodeSource
+                    curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+                    $PKG_MANAGER install -y nodejs
+                fi
+            fi
+            
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}✗ Failed to install Node.js${NC}"
+                echo -e "${YELLOW}You may need to manually install Node.js 16 or higher${NC}"
+                exit 1
+            fi
+        fi
+        
+        # Verify installation
+        if command -v node &>/dev/null; then
+            NODE_VERSION=$(node --version)
+            echo -e "${GREEN}✓ Node.js $NODE_VERSION installed successfully${NC}"
+        else
+            echo -e "${RED}✗ Node.js installation verification failed${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}✗ Cannot install Node.js automatically (not running as root)${NC}"
+        echo -e "${YELLOW}Please install Node.js 16 or higher manually:${NC}"
+        
+        if [ "$OS_FAMILY" == "debian" ]; then
+            echo -e "  ${BLUE}curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash -${NC}"
+            echo -e "  ${BLUE}sudo apt-get install -y nodejs${NC}"
+        else
+            if [[ "$OS_VERSION" == "9"* ]]; then
+                echo -e "  ${BLUE}sudo $PKG_MANAGER install -y nodejs npm${NC}"
+            elif [[ "$OS_VERSION" == "8"* ]]; then
+                echo -e "  ${BLUE}sudo $PKG_MANAGER module enable -y nodejs:18${NC}"
+                echo -e "  ${BLUE}sudo $PKG_MANAGER install -y nodejs npm${NC}"
+            else
+                echo -e "  ${BLUE}curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -${NC}"
+                echo -e "  ${BLUE}sudo $PKG_MANAGER install -y nodejs${NC}"
+            fi
+        fi
+        exit 1
+    fi
 fi
 
 # Step 2: Create Python virtual environment

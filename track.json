@@ -1434,6 +1434,30 @@
           }
         ],
         "impact": "The setup.sh script is now production-ready and works across all major Linux distributions. When run with sudo, it automatically creates systemd service files that enable SIEMply to run as a system service with automatic startup on boot, proper logging, and automatic restart on failure. The script intelligently detects the operating system and uses the appropriate package manager (apt for Debian/Ubuntu, dnf/yum for RHEL/CentOS/Fedora/Rocky/AlmaLinux). Services can be managed using standard systemctl commands, and logs are available both through journalctl and file-based logging in the logs/ directory. This makes SIEMply suitable for production deployments on any major Linux distribution."
+      },
+      {
+        "date": "2025-10-29",
+        "description": "Added automatic Python and Node.js installation to setup.sh script",
+        "rationale": "User encountered Node.js installation error on RHEL 9.6 server. The script was exiting when Node.js wasn't found instead of installing it automatically. User requested that Node.js installation be handled automatically within the setup.sh script to avoid manual installation steps.",
+        "changes": [
+          {
+            "file": "setup.sh",
+            "changes": [
+              "Added automatic curl installation check and install (needed for NodeSource repository)",
+              "Enhanced Python check to automatically install Python 3, pip, and venv/devel packages if missing",
+              "Enhanced Node.js check to automatically install Node.js 18 if missing when running as root",
+              "For Debian/Ubuntu: Uses NodeSource repository (setup_18.x) via curl and installs with apt",
+              "For RHEL/CentOS 9: Installs nodejs and npm directly from default repos",
+              "For RHEL/CentOS 8: Enables nodejs:18 module stream, then installs nodejs and npm",
+              "For RHEL/CentOS 7: Uses NodeSource RPM repository (rpm.nodesource.com) for Node.js 18",
+              "For Fedora: Installs nodejs and npm from default repos",
+              "Added installation verification steps after each package installation",
+              "Provides OS-specific manual installation instructions if not running as root",
+              "All dependency installations now happen automatically when script is run with sudo"
+            ]
+          }
+        ],
+        "impact": "The setup.sh script is now fully automated and can install all required dependencies (curl, Python 3, Node.js) without any manual intervention when run with sudo. On RHEL 9.6 (and all other supported Linux distributions), the script will detect missing packages and install them using the appropriate method for each OS version. Users no longer need to manually install Node.js before running setup - the script handles everything automatically. This significantly simplifies the installation process, especially for users deploying on fresh/minimal OS installations."
       }
     ]
   }
