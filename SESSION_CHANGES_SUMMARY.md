@@ -108,12 +108,43 @@ This document summarizes all enhancements made to SIEMply during this session.
 
 ---
 
+## Change #5: Database Validation and Corruption Handling
+
+**Issue:** User's RHEL 9.6 server failed with "sqlite3.DatabaseError: file is not a database" during Step 7 (database initialization).
+
+**Root Cause:** Previous incomplete setup attempt created a corrupted or invalid database file. When script tried to initialize, SQLite couldn't recognize it as a valid database.
+
+**Solution:**
+- Added sqlite3 command-line tool auto-installation
+- Added database file validation before initialization
+- Detects corrupted databases using `PRAGMA integrity_check`
+- Automatically backs up corrupted files with timestamps
+- Removes corrupted database and creates fresh one
+- Added retry logic if initialization fails
+- Added post-creation validation
+- Ensures database has valid tables before proceeding
+
+**Files Modified:**
+- `setup.sh`
+- `track.json`
+
+**Files Created:**
+- `DATABASE_FIX_GUIDE.md` - Complete guide on database issues
+
+**Result:**
+- Handles corrupted databases automatically
+- Backs up files as: `siemply.db.corrupted.TIMESTAMP.bak`
+- No manual intervention needed
+- Setup succeeds even with corrupted previous attempts
+
+---
+
 ## Summary of All Files Modified
 
 ### Modified Files
 1. `frontend/src/components/Layout.tsx` - Hidden sidebar items
 2. `frontend/src/pages/PlaybookList.tsx` - Fixed API endpoint
-3. `setup.sh` - Enhanced with services + auto-install
+3. `setup.sh` - Enhanced with services + auto-install + database validation
 4. `SETUP_GUIDE.md` - Updated documentation
 5. `track.json` - Documented all changes
 
@@ -121,7 +152,8 @@ This document summarizes all enhancements made to SIEMply during this session.
 1. `SYSTEMCTL_SERVICES.md` - Service management guide (419 lines)
 2. `SETUP_ENHANCEMENT_SUMMARY.md` - Enhancement details
 3. `AUTO_DEPENDENCY_INSTALL.md` - Auto-install guide
-4. `SESSION_CHANGES_SUMMARY.md` - This file
+4. `DATABASE_FIX_GUIDE.md` - Database corruption handling guide
+5. `SESSION_CHANGES_SUMMARY.md` - This file
 
 ---
 
@@ -295,11 +327,11 @@ python3 --version
 ## Session Statistics
 
 - **Files Modified:** 5
-- **Files Created:** 4
-- **Lines Added:** ~500+
-- **Features Added:** 4 major enhancements
+- **Files Created:** 5
+- **Lines Added:** ~600+
+- **Features Added:** 5 major enhancements
 - **OS Support Added:** 7 distributions
-- **Issues Fixed:** 3
+- **Issues Fixed:** 4
 
 ---
 

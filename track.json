@@ -1458,6 +1458,29 @@
           }
         ],
         "impact": "The setup.sh script is now fully automated and can install all required dependencies (curl, Python 3, Node.js) without any manual intervention when run with sudo. On RHEL 9.6 (and all other supported Linux distributions), the script will detect missing packages and install them using the appropriate method for each OS version. Users no longer need to manually install Node.js before running setup - the script handles everything automatically. This significantly simplifies the installation process, especially for users deploying on fresh/minimal OS installations."
+      },
+      {
+        "date": "2025-10-29",
+        "description": "Added database validation and corruption handling to setup.sh script",
+        "rationale": "User encountered 'sqlite3.DatabaseError: file is not a database' error on RHEL 9.6 server during database initialization. This occurs when a previous incomplete setup creates a corrupted or invalid database file. The script needs to detect and handle corrupted database files automatically.",
+        "changes": [
+          {
+            "file": "setup.sh",
+            "changes": [
+              "Added automatic sqlite3 command-line tool installation (needed for database validation)",
+              "Added database file validation before initialization using sqlite3 PRAGMA integrity_check",
+              "If database file exists but is corrupted/invalid, it's backed up with timestamp and removed",
+              "If database file exists and is valid, it's backed up before proceeding",
+              "Added retry logic: if initialization fails, remove database and retry once",
+              "Added post-initialization validation to ensure database was created successfully",
+              "Added database table existence check using sqlite_master query",
+              "Backup files are named with timestamps: siemply.db.corrupted.YYYYMMDD_HHMMSS.bak",
+              "Ensures backend directory exists before initialization",
+              "Provides clear status messages for each validation step"
+            ]
+          }
+        ],
+        "impact": "The setup.sh script now handles corrupted database files gracefully. When running setup on a system with a previous failed installation, the script will automatically detect the corrupted database file, back it up with a timestamp, remove it, and create a fresh database. This prevents the 'file is not a database' error and allows setup to complete successfully. The script also validates the database after creation to ensure it's functional before proceeding. Users no longer need to manually delete corrupted database files - the script handles everything automatically."
       }
     ]
   }
