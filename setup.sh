@@ -268,11 +268,29 @@ echo -e "${GREEN}✓ Virtual environment activated${NC}"
 # Step 3: Install Python dependencies
 echo -e "\n${YELLOW}Step 3: Installing Python dependencies...${NC}"
 pip install --upgrade pip
+
+# Install compatible bcrypt version first (before passlib)
+echo -e "${YELLOW}Installing compatible bcrypt version...${NC}"
+pip install 'bcrypt==4.0.1'
+if [ $? -ne 0 ]; then
+    echo -e "${YELLOW}⚠ Failed to install bcrypt 4.0.1, trying 3.2.2...${NC}"
+    pip install 'bcrypt==3.2.2'
+fi
+
+# Now install other dependencies
 pip install -r "$SCRIPT_DIR/backend/requirements.txt"
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Failed to install Python dependencies${NC}"
     exit 1
 fi
+
+# Verify bcrypt is working
+echo -e "${YELLOW}Verifying bcrypt installation...${NC}"
+python3 -c "import bcrypt; print('bcrypt version:', bcrypt.__version__)" 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ bcrypt is working correctly${NC}"
+fi
+
 echo -e "${GREEN}✓ Python dependencies installed${NC}"
 
 # Step 4: Install Node.js dependencies
@@ -351,19 +369,44 @@ fi
 # Ensure backend directory exists
 mkdir -p "$SCRIPT_DIR/backend"
 
-# Initialize the database
+# Initialize the database (tables only, skip admin user creation)
 cd "$SCRIPT_DIR"
-python backend/init_db.py
+echo -e "${YELLOW}Creating database tables...${NC}"
+
+# Create a temporary init script that only creates tables (no admin user)
+cat > "$SCRIPT_DIR/backend/init_db_temp.py" << 'INIT_SCRIPT'
+#!/usr/bin/env python3
+"""Temporary database initialization script - tables only"""
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from backend.models import Base, engine
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("Creating database tables...")
+Base.metadata.create_all(bind=engine)
+logger.info("Database tables created successfully.")
+INIT_SCRIPT
+
+python backend/init_db_temp.py
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Failed to initialize database${NC}"
     echo -e "${YELLOW}Trying to remove database file and retry...${NC}"
     rm -f "$DB_FILE"
-    python backend/init_db.py
+    python backend/init_db_temp.py
     if [ $? -ne 0 ]; then
         echo -e "${RED}✗ Failed to initialize database after retry${NC}"
+        rm -f "$SCRIPT_DIR/backend/init_db_temp.py"
         exit 1
     fi
 fi
+
+# Clean up temp script
+rm -f "$SCRIPT_DIR/backend/init_db_temp.py"
 
 # Verify database was created successfully
 if [ -f "$DB_FILE" ]; then
